@@ -64,6 +64,7 @@ func SetLevelString(str string) error {
 }
 
 var _level = uint64(DebugLevel) // default is debug
+
 func setLevel(level Level) {
 	atomic.StoreUint64(&_level, uint64(level))
 }
