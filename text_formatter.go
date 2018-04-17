@@ -15,7 +15,9 @@ func (f *textFormatter) Format(entry *entry) ([]byte, error) {
 	} else {
 		buffer = bytes.NewBuffer(make([]byte, 0, 4<<10))
 	}
-	prefixFieldClashes(entry.Fields)
+	if len(entry.Fields) > 0 {
+		prefixFieldClashes(entry.Fields)
+	}
 	f.appendKeyValue(buffer, "time", entry.Time.In(_beijingLocation).Format(TimeFormatLayout))
 	f.appendKeyValue(buffer, "level", entry.Level.String())
 	f.appendKeyValue(buffer, "request_id", entry.RequestId)
