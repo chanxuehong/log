@@ -1,7 +1,8 @@
 package log
 
 import (
-	"strconv"
+	"fmt"
+	"strings"
 	"sync/atomic"
 )
 
@@ -12,26 +13,59 @@ const (
 	DebugLevel
 )
 
+const (
+	ErrorLevelString = "error"
+	WarnLevelString  = "warning"
+	InfoLevelString  = "info"
+	DebugLevelString = "debug"
+)
+
 type Level uint
 
 func (level Level) String() string {
 	switch level {
 	case ErrorLevel:
-		return "error"
+		return ErrorLevelString
 	case WarnLevel:
-		return "warning"
+		return WarnLevelString
 	case InfoLevel:
-		return "info"
+		return InfoLevelString
 	case DebugLevel:
-		return "debug"
+		return DebugLevelString
 	default:
-		return "unknown_" + strconv.FormatUint(uint64(level), 10)
+		return fmt.Sprintf("unknown_%d", level)
 	}
 }
 
-var _level = uint64(DebugLevel)
+var _level = uint64(DebugLevel) // default is debug
 
-func SetLevel(level Level) {
+func SetLevel(level Level) error {
+	if level < ErrorLevel || level > DebugLevel {
+		return fmt.Errorf("invalid level: %d", level)
+	}
+	setLevel(level)
+	return nil
+}
+
+func SetLevelString(str string) error {
+	var level Level
+	switch strings.ToLower(str) {
+	case DebugLevelString:
+		level = DebugLevel
+	case InfoLevelString:
+		level = InfoLevel
+	case WarnLevelString:
+		level = WarnLevel
+	case ErrorLevelString:
+		level = ErrorLevel
+	default:
+		return fmt.Errorf("invalid level string: %q", str)
+	}
+	setLevel(level)
+	return nil
+}
+
+func setLevel(level Level) {
 	atomic.StoreUint64(&_level, uint64(level))
 }
 
