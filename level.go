@@ -37,8 +37,6 @@ func (level Level) String() string {
 	}
 }
 
-var _level = uint64(DebugLevel) // default is debug
-
 func SetLevel(level Level) error {
 	if level < ErrorLevel || level > DebugLevel {
 		return fmt.Errorf("invalid level: %d", level)
@@ -65,6 +63,7 @@ func SetLevelString(str string) error {
 	return nil
 }
 
+var _level = uint64(DebugLevel) // default is debug
 func setLevel(level Level) {
 	atomic.StoreUint64(&_level, uint64(level))
 }
