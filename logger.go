@@ -119,6 +119,9 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 		return
 	}
 	l.output(calldepth+1, level, msg, fields)
+	if level == FatalLevel {
+		os.Exit(1)
+	}
 }
 
 func (l *logger) output(calldepth int, level Level, msg string, fields []interface{}) {
