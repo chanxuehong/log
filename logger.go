@@ -16,7 +16,7 @@ import (
 
 const (
 	TimeFormatLayout   = "2006-01-02 15:04:05.000"
-	RequestIdHeaderKey = "X-Log-Request-Id"
+	RequestIdHeaderKey = "X-Request-Id"
 )
 
 func FromRequest(req *http.Request) Logger {
