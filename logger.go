@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	TimeFormatLayout                = "2006-01-02 15:04:05.000"
-	RequestIdHeaderKeyInHttpRequest = "X-Log-Request-Id"
+	TimeFormatLayout   = "2006-01-02 15:04:05.000"
+	RequestIdHeaderKey = "X-Log-Request-Id"
 )
 
 func FromRequest(req *http.Request) Logger {
@@ -24,7 +24,7 @@ func FromRequest(req *http.Request) Logger {
 	if ok && v != nil {
 		return v
 	}
-	requestId := req.Header.Get(RequestIdHeaderKeyInHttpRequest)
+	requestId := req.Header.Get(RequestIdHeaderKey)
 	if requestId == "" {
 		requestId = NewRequestId()
 	}
