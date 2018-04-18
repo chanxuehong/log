@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -128,11 +129,23 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	if !isLevelEnabled(level) {
 		return
 	}
+
+	var location string
+	if _, file, line, ok := runtime.Caller(calldepth + 1); ok {
+		location = trimFileName(file) + ":" + strconv.Itoa(line)
+	} else {
+		location = "???"
+	}
+
 	var m map[string]interface{}
 	if len(fields) == 0 {
 		m = l.fields
 	} else {
-		m2 := parseFields(fields)
+		m2, err := parseFields(fields)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "log: failed to parseFields, error=%v, location=%s\n", err, location)
+			return
+		}
 		m = make(map[string]interface{}, len(l.fields)+len(m2))
 		for k, v := range l.fields {
 			m[k] = v
@@ -146,13 +159,6 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	var location string
-	if _, file, line, ok := runtime.Caller(calldepth + 1); ok {
-		location = trimFileName(file) + ":" + strconv.Itoa(line)
-	} else {
-		location = "???"
-	}
-
 	data, err := l.formatter.Format(&entry{
 		Location:  location,
 		Time:      time.Now(),
@@ -163,11 +169,11 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Buffer:    buffer,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to format entry, %v\n", err)
+		fmt.Fprintf(os.Stderr, "log: failed to format entry, error=%v, location=%s\n", err, location)
 		return
 	}
 	if _, err = l.out.Write(data); err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to write to log, %v\n", err)
+		fmt.Fprintf(os.Stderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
 }
@@ -199,7 +205,20 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 	}
 }
 func (l *logger) WithFields(fields ...interface{}) Logger {
-	m := parseFields(fields)
+	if len(fields) == 0 {
+		return l
+	}
+	m, err := parseFields(fields)
+	if err != nil {
+		var location string
+		if _, file, line, ok := runtime.Caller(1); ok {
+			location = trimFileName(file) + ":" + strconv.Itoa(line)
+		} else {
+			location = "???"
+		}
+		fmt.Fprintf(os.Stderr, "log: failed to parseFields, error=%v, location=%s\n", err, location)
+		return l
+	}
 	m2 := make(map[string]interface{}, len(l.fields)+len(m))
 	for k, v := range l.fields {
 		m2[k] = v
@@ -215,12 +234,18 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 	}
 }
 
-func parseFields(fields []interface{}) map[string]interface{} {
+var (
+	_ErrNumberOfFieldsMustNotBeOdd = errors.New("the number of fields must not be odd")
+	_ErrTypeOfFieldKeyMustBeString = errors.New("the type of field key must be string")
+	_ErrFieldKeyMustNotBeEmpty     = errors.New("the field key must not be empty")
+)
+
+func parseFields(fields []interface{}) (map[string]interface{}, error) {
 	if len(fields) == 0 {
-		return nil
+		return nil, nil
 	}
 	if len(fields)&1 != 0 {
-		panic("the number of fields must not be odd")
+		return nil, _ErrNumberOfFieldsMustNotBeOdd
 	}
 
 	// 采用下面的实现可以避免边界检查.
@@ -233,14 +258,14 @@ func parseFields(fields []interface{}) map[string]interface{} {
 		if i&1 == 0 { // key
 			k, ok = v.(string)
 			if !ok {
-				panic("key must be of type string")
+				return nil, _ErrTypeOfFieldKeyMustBeString
 			}
 			if k == "" {
-				panic("key must not be empty")
+				return nil, _ErrFieldKeyMustNotBeEmpty
 			}
 		} else { // value
 			m[k] = v
 		}
 	}
-	return m
+	return m, nil
 }
