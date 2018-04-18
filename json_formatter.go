@@ -26,6 +26,8 @@ func (f *jsonFormatter) Format(entry *entry) ([]byte, error) {
 	fields["request_id"] = entry.RequestId
 	fields["file_line"] = entry.Location
 	fields["msg"] = entry.Message
-	json.NewEncoder(buffer).Encode(fields)
+	if err := json.NewEncoder(buffer).Encode(fields); err != nil {
+		return nil, err
+	}
 	return buffer.Bytes(), nil
 }

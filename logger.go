@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -135,7 +136,7 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 		location = "???"
 	}
 
-	data, _ := l.formatter.Format(&entry{
+	data, err := l.formatter.Format(&entry{
 		Location:  location,
 		Time:      time.Now(),
 		Level:     level,
@@ -144,7 +145,14 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 		Fields:    m,
 		Buffer:    buffer,
 	})
-	l.out.Write(data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "log: failed to format entry, %v\n", err)
+		return
+	}
+	if _, err = l.out.Write(data); err != nil {
+		fmt.Fprintf(os.Stderr, "log: failed to write to log, %v\n", err)
+		return
+	}
 }
 
 func trimFileName(name string) string {
