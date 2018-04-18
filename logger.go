@@ -59,7 +59,9 @@ type Logger interface {
 	WithFields(fields ...interface{}) Logger
 }
 
-func New(requestId string) Logger {
+func New(requestId string) Logger { return _New(requestId) }
+
+func _New(requestId string) *logger {
 	return &logger{
 		requestId: requestId,
 		fields:    nil,
@@ -90,20 +92,20 @@ type entry struct {
 }
 
 func (l *logger) Fatal(msg string, fields ...interface{}) {
-	l.Output(1, FatalLevel, msg, fields...)
+	l.output(1, FatalLevel, msg, fields...)
 	os.Exit(1)
 }
 func (l *logger) Error(msg string, fields ...interface{}) {
-	l.Output(1, ErrorLevel, msg, fields...)
+	l.output(1, ErrorLevel, msg, fields...)
 }
 func (l *logger) Warn(msg string, fields ...interface{}) {
-	l.Output(1, WarnLevel, msg, fields...)
+	l.output(1, WarnLevel, msg, fields...)
 }
 func (l *logger) Info(msg string, fields ...interface{}) {
-	l.Output(1, InfoLevel, msg, fields...)
+	l.output(1, InfoLevel, msg, fields...)
 }
 func (l *logger) Debug(msg string, fields ...interface{}) {
-	l.Output(1, DebugLevel, msg, fields...)
+	l.output(1, DebugLevel, msg, fields...)
 }
 
 var _bufferPool = sync.Pool{
@@ -116,6 +118,10 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 	if !isValidLevel(level) {
 		return
 	}
+	l.output(calldepth+1, level, msg, fields...)
+}
+
+func (l *logger) output(calldepth int, level Level, msg string, fields ...interface{}) {
 	if !isLevelEnabled(level) {
 		return
 	}
