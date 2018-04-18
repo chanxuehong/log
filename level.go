@@ -7,23 +7,34 @@ import (
 )
 
 const (
-	ErrorLevel Level = iota
+	FatalLevel Level = iota
+	ErrorLevel
 	WarnLevel
 	InfoLevel
 	DebugLevel
 )
 
 const (
+	FatalLevelString = "fatal"
 	ErrorLevelString = "error"
 	WarnLevelString  = "warning"
 	InfoLevelString  = "info"
 	DebugLevelString = "debug"
 )
 
+func isValidLevel(level Level) bool {
+	return level >= FatalLevel && level <= DebugLevel
+}
+func isLevelEnabled(level Level) bool {
+	return getLevel() >= level
+}
+
 type Level uint
 
 func (level Level) String() string {
 	switch level {
+	case FatalLevel:
+		return FatalLevelString
 	case ErrorLevel:
 		return ErrorLevelString
 	case WarnLevel:
@@ -38,7 +49,7 @@ func (level Level) String() string {
 }
 
 func SetLevel(level Level) error {
-	if level < ErrorLevel || level > DebugLevel {
+	if !isValidLevel(level) {
 		return fmt.Errorf("invalid level: %d", level)
 	}
 	setLevel(level)
@@ -56,6 +67,8 @@ func SetLevelString(str string) error {
 		level = WarnLevel
 	case ErrorLevelString:
 		level = ErrorLevel
+	case FatalLevelString:
+		level = FatalLevel
 	default:
 		return fmt.Errorf("invalid level string: %q", str)
 	}

@@ -49,6 +49,7 @@ func NewContext(ctx context.Context, logger Logger) context.Context {
 }
 
 type Logger interface {
+	Fatal(msg string, fields ...interface{})
 	Error(msg string, fields ...interface{})
 	Warn(msg string, fields ...interface{})
 	Info(msg string, fields ...interface{})
@@ -88,6 +89,10 @@ type entry struct {
 	Buffer    *bytes.Buffer
 }
 
+func (l *logger) Fatal(msg string, fields ...interface{}) {
+	l.Output(1, FatalLevel, msg, fields...)
+	os.Exit(1)
+}
 func (l *logger) Error(msg string, fields ...interface{}) {
 	l.Output(1, ErrorLevel, msg, fields...)
 }
@@ -108,7 +113,10 @@ var _bufferPool = sync.Pool{
 }
 
 func (l *logger) Output(calldepth int, level Level, msg string, fields ...interface{}) {
-	if getLevel() < level {
+	if !isValidLevel(level) {
+		return
+	}
+	if !isLevelEnabled(level) {
 		return
 	}
 	var m map[string]interface{}

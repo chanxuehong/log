@@ -1,6 +1,13 @@
 package log
 
+import "os"
+
 var _std = New("")
+
+func Fatal(msg string, fields ...interface{}) {
+	_std.Output(1, FatalLevel, msg, fields...)
+	os.Exit(1)
+}
 
 func Error(msg string, fields ...interface{}) {
 	_std.Output(1, ErrorLevel, msg, fields...)
