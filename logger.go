@@ -26,9 +26,9 @@ func FromRequest(req *http.Request) Logger {
 	}
 	requestId := req.Header.Get(RequestIdHeaderKeyInHttpRequest)
 	if requestId == "" {
-		requestId = newRequestId()
+		requestId = NewRequestId()
 	}
-	return newLogger(requestId)
+	return New(requestId)
 }
 
 type loggerKey struct{}
@@ -38,7 +38,7 @@ func FromContext(ctx context.Context) Logger {
 	if ok && v != nil {
 		return v
 	}
-	return newLogger(newRequestId())
+	return New(NewRequestId())
 }
 
 func NewContext(ctx context.Context, logger Logger) context.Context {
@@ -58,7 +58,7 @@ type Logger interface {
 	WithFields(fields ...interface{}) Logger
 }
 
-func newLogger(requestId string) Logger {
+func New(requestId string) Logger {
 	return &logger{
 		requestId: requestId,
 		fields:    nil,

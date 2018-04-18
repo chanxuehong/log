@@ -1,6 +1,6 @@
 package log
 
-var _std = newLogger("")
+var _std = New("")
 
 func Error(msg string, fields ...interface{}) {
 	_std.Output(1, ErrorLevel, msg, fields...)
