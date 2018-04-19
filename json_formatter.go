@@ -21,11 +21,11 @@ func (f *jsonFormatter) Format(entry *entry) ([]byte, error) {
 	} else {
 		fields = make(map[string]interface{}, 8)
 	}
-	fields["time"] = entry.Time.In(_beijingLocation).Format(TimeFormatLayout)
-	fields["level"] = entry.Level.String()
-	fields["request_id"] = entry.TraceId
-	fields["location"] = entry.Location
-	fields["msg"] = entry.Message
+	fields[fieldKeyTime] = entry.Time.In(_beijingLocation).Format(TimeFormatLayout)
+	fields[fieldKeyLevel] = entry.Level.String()
+	fields[fieldKeyTraceId] = entry.TraceId
+	fields[fieldKeyLocation] = entry.Location
+	fields[fieldKeyMessage] = entry.Message
 	if err := json.NewEncoder(buffer).Encode(fields); err != nil {
 		return nil, err
 	}
