@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -83,7 +84,7 @@ type formatter interface {
 }
 
 type entry struct {
-	Location string // file:line
+	Location string // function(file:line)
 	Time     time.Time
 	Level    Level
 	TraceId  string
@@ -131,8 +132,12 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	}
 
 	var location string
-	if _, file, line, ok := runtime.Caller(calldepth + 1); ok {
-		location = trimFileName(file) + ":" + strconv.Itoa(line)
+	if pc, file, line, ok := runtime.Caller(calldepth + 1); ok {
+		if fn := runtime.FuncForPC(pc); fn != nil {
+			location = trimFuncName(fn.Name()) + "(" + trimFileName(file) + ":" + strconv.Itoa(line) + ")"
+		} else {
+			location = trimFileName(file) + ":" + strconv.Itoa(line)
+		}
 	} else {
 		location = "???"
 	}
@@ -181,6 +186,10 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	}
 }
 
+func trimFuncName(name string) string {
+	return path.Base(name)
+}
+
 func trimFileName(name string) string {
 	i := strings.Index(name, "/src/")
 	if i < 0 {
@@ -214,8 +223,12 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 	m, err := parseFields(fields)
 	if err != nil {
 		var location string
-		if _, file, line, ok := runtime.Caller(1); ok {
-			location = trimFileName(file) + ":" + strconv.Itoa(line)
+		if pc, file, line, ok := runtime.Caller(1); ok {
+			if fn := runtime.FuncForPC(pc); fn != nil {
+				location = trimFuncName(fn.Name()) + "(" + trimFileName(file) + ":" + strconv.Itoa(line) + ")"
+			} else {
+				location = trimFileName(file) + ":" + strconv.Itoa(line)
+			}
 		} else {
 			location = "???"
 		}

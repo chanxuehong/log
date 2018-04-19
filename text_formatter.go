@@ -21,7 +21,7 @@ func (f *textFormatter) Format(entry *entry) ([]byte, error) {
 	f.appendKeyValue(buffer, "time", entry.Time.In(_beijingLocation).Format(TimeFormatLayout))
 	f.appendKeyValue(buffer, "level", entry.Level.String())
 	f.appendKeyValue(buffer, "request_id", entry.TraceId)
-	f.appendKeyValue(buffer, "file_line", entry.Location)
+	f.appendKeyValue(buffer, "location", entry.Location)
 	f.appendKeyValue(buffer, "msg", entry.Message)
 	for k, v := range entry.Fields {
 		f.appendKeyValue(buffer, k, v)
@@ -36,7 +36,7 @@ const (
 	fieldKeyTime     = "time"
 	fieldKeyLevel    = "level"
 	fieldKeyTraceId  = "request_id"
-	fieldKeyFileLine = "file_line"
+	fieldKeyFileLine = "location"
 	fieldKeyMsg      = "msg"
 )
 
