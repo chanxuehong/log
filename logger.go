@@ -143,15 +143,18 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	} else {
 		m2, err := parseFields(fields)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "log: failed to parseFields, error=%v, location=%s\n", err, location)
-			return
+			fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 		}
-		m = make(map[string]interface{}, len(l.fields)+len(m2))
-		for k, v := range l.fields {
-			m[k] = v
-		}
-		for k, v := range m2 {
-			m[k] = v
+		if len(m2) == 0 {
+			m = l.fields
+		} else {
+			m = make(map[string]interface{}, len(l.fields)+len(m2))
+			for k, v := range l.fields {
+				m[k] = v
+			}
+			for k, v := range m2 {
+				m[k] = v
+			}
 		}
 	}
 
@@ -216,7 +219,9 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
-		fmt.Fprintf(os.Stderr, "log: failed to parseFields, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+	}
+	if len(m) == 0 {
 		return l
 	}
 	m2 := make(map[string]interface{}, len(l.fields)+len(m))
@@ -258,10 +263,10 @@ func parseFields(fields []interface{}) (map[string]interface{}, error) {
 		if i&1 == 0 { // key
 			k, ok = v.(string)
 			if !ok {
-				return nil, _ErrTypeOfFieldKeyMustBeString
+				return m, _ErrTypeOfFieldKeyMustBeString
 			}
 			if k == "" {
-				return nil, _ErrFieldKeyMustNotBeEmpty
+				return m, _ErrFieldKeyMustNotBeEmpty
 			}
 		} else { // value
 			m[k] = v
