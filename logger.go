@@ -22,6 +22,9 @@ const (
 )
 
 func FromRequest(req *http.Request) Logger {
+	if req == nil {
+		return New(NewTraceId())
+	}
 	v, ok := req.Context().Value(loggerKey{}).(Logger)
 	if ok && v != nil {
 		return v
@@ -36,6 +39,9 @@ func FromRequest(req *http.Request) Logger {
 type loggerKey struct{}
 
 func FromContext(ctx context.Context) Logger {
+	if ctx == nil {
+		return New(NewTraceId())
+	}
 	v, ok := ctx.Value(loggerKey{}).(Logger)
 	if ok && v != nil {
 		return v
@@ -46,6 +52,9 @@ func FromContext(ctx context.Context) Logger {
 func NewContext(ctx context.Context, logger Logger) context.Context {
 	if logger == nil {
 		return ctx
+	}
+	if ctx == nil {
+		return context.WithValue(context.Background(), loggerKey{}, logger)
 	}
 	if v, ok := ctx.Value(loggerKey{}).(Logger); ok && v == logger {
 		return ctx
@@ -122,6 +131,9 @@ var _bufferPool = sync.Pool{
 func (l *logger) Output(calldepth int, level Level, msg string, fields ...interface{}) {
 	if !isValidLevel(level) {
 		return
+	}
+	if calldepth < 0 {
+		calldepth = 0
 	}
 	l.output(calldepth+1, level, msg, fields)
 	if level == FatalLevel {
