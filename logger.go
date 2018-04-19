@@ -47,6 +47,9 @@ func NewContext(ctx context.Context, logger Logger) context.Context {
 	if logger == nil {
 		return ctx
 	}
+	if v, ok := ctx.Value(loggerKey{}).(Logger); ok && v == logger {
+		return ctx
+	}
 	return context.WithValue(ctx, loggerKey{}, logger)
 }
 
