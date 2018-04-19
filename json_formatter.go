@@ -23,7 +23,7 @@ func (f *jsonFormatter) Format(entry *entry) ([]byte, error) {
 	}
 	fields["time"] = entry.Time.In(_beijingLocation).Format(TimeFormatLayout)
 	fields["level"] = entry.Level.String()
-	fields["request_id"] = entry.RequestId
+	fields["request_id"] = entry.TraceId
 	fields["file_line"] = entry.Location
 	fields["msg"] = entry.Message
 	if err := json.NewEncoder(buffer).Encode(fields); err != nil {

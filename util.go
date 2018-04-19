@@ -2,6 +2,6 @@ package log
 
 import "github.com/chanxuehong/uuid"
 
-func NewRequestId() string {
+func NewTraceId() string {
 	return string(uuid.NewV1().HexEncode())
 }

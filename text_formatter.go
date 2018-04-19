@@ -20,7 +20,7 @@ func (f *textFormatter) Format(entry *entry) ([]byte, error) {
 	}
 	f.appendKeyValue(buffer, "time", entry.Time.In(_beijingLocation).Format(TimeFormatLayout))
 	f.appendKeyValue(buffer, "level", entry.Level.String())
-	f.appendKeyValue(buffer, "request_id", entry.RequestId)
+	f.appendKeyValue(buffer, "request_id", entry.TraceId)
 	f.appendKeyValue(buffer, "file_line", entry.Location)
 	f.appendKeyValue(buffer, "msg", entry.Message)
 	for k, v := range entry.Fields {
@@ -33,11 +33,11 @@ func (f *textFormatter) Format(entry *entry) ([]byte, error) {
 var _beijingLocation = time.FixedZone("Asia/Shanghai", 8*60*60)
 
 const (
-	fieldKeyTime      = "time"
-	fieldKeyLevel     = "level"
-	fieldKeyRequestId = "request_id"
-	fieldKeyFileLine  = "file_line"
-	fieldKeyMsg       = "msg"
+	fieldKeyTime     = "time"
+	fieldKeyLevel    = "level"
+	fieldKeyTraceId  = "request_id"
+	fieldKeyFileLine = "file_line"
+	fieldKeyMsg      = "msg"
 )
 
 func prefixFieldClashes(data map[string]interface{}) {
@@ -49,9 +49,9 @@ func prefixFieldClashes(data map[string]interface{}) {
 		data["fields."+fieldKeyLevel] = v
 		delete(data, fieldKeyLevel)
 	}
-	if v, ok := data[fieldKeyRequestId]; ok {
-		data["fields."+fieldKeyRequestId] = v
-		delete(data, fieldKeyRequestId)
+	if v, ok := data[fieldKeyTraceId]; ok {
+		data["fields."+fieldKeyTraceId] = v
+		delete(data, fieldKeyTraceId)
 	}
 	if v, ok := data[fieldKeyFileLine]; ok {
 		data["fields."+fieldKeyFileLine] = v

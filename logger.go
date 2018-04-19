@@ -17,7 +17,7 @@ import (
 
 const (
 	TimeFormatLayout   = "2006-01-02 15:04:05.000"
-	RequestIdHeaderKey = "X-Request-Id"
+	TraceIdIdHeaderKey = "X-Request-Id"
 )
 
 func FromRequest(req *http.Request) Logger {
@@ -25,11 +25,11 @@ func FromRequest(req *http.Request) Logger {
 	if ok && v != nil {
 		return v
 	}
-	requestId := req.Header.Get(RequestIdHeaderKey)
-	if requestId == "" {
-		requestId = NewRequestId()
+	traceId := req.Header.Get(TraceIdIdHeaderKey)
+	if traceId == "" {
+		traceId = NewTraceId()
 	}
-	return New(requestId)
+	return New(traceId)
 }
 
 type loggerKey struct{}
@@ -39,7 +39,7 @@ func FromContext(ctx context.Context) Logger {
 	if ok && v != nil {
 		return v
 	}
-	return New(NewRequestId())
+	return New(NewTraceId())
 }
 
 func NewContext(ctx context.Context, logger Logger) context.Context {
@@ -60,11 +60,11 @@ type Logger interface {
 	WithFields(fields ...interface{}) Logger
 }
 
-func New(requestId string) Logger { return _New(requestId) }
+func New(traceId string) Logger { return _New(traceId) }
 
-func _New(requestId string) *logger {
+func _New(traceId string) *logger {
 	return &logger{
-		requestId: requestId,
+		traceId:   traceId,
 		fields:    nil,
 		out:       os.Stdout,
 		formatter: &textFormatter{},
@@ -72,7 +72,7 @@ func _New(requestId string) *logger {
 }
 
 type logger struct {
-	requestId string
+	traceId   string
 	fields    map[string]interface{}
 	out       io.Writer
 	formatter formatter
@@ -83,13 +83,13 @@ type formatter interface {
 }
 
 type entry struct {
-	Location  string // file:line
-	Time      time.Time
-	Level     Level
-	RequestId string
-	Message   string
-	Fields    map[string]interface{}
-	Buffer    *bytes.Buffer
+	Location string // file:line
+	Time     time.Time
+	Level    Level
+	TraceId  string
+	Message  string
+	Fields   map[string]interface{}
+	Buffer   *bytes.Buffer
 }
 
 func (l *logger) Fatal(msg string, fields ...interface{}) {
@@ -160,13 +160,13 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	buffer.Reset()
 
 	data, err := l.formatter.Format(&entry{
-		Location:  location,
-		Time:      time.Now(),
-		Level:     level,
-		RequestId: l.requestId,
-		Message:   msg,
-		Fields:    m,
-		Buffer:    buffer,
+		Location: location,
+		Time:     time.Now(),
+		Level:    level,
+		TraceId:  l.traceId,
+		Message:  msg,
+		Fields:   m,
+		Buffer:   buffer,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "log: failed to format entry, error=%v, location=%s\n", err, location)
@@ -198,7 +198,7 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 	}
 	m[key] = value
 	return &logger{
-		requestId: l.requestId,
+		traceId:   l.traceId,
 		fields:    m,
 		out:       l.out,
 		formatter: l.formatter,
@@ -227,7 +227,7 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		m2[k] = v
 	}
 	return &logger{
-		requestId: l.requestId,
+		traceId:   l.traceId,
 		fields:    m2,
 		out:       l.out,
 		formatter: l.formatter,
