@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	TimeFormatLayout   = "2006-01-02 15:04:05.000"
-	TraceIdIdHeaderKey = "X-Request-Id"
+	TimeFormatLayout = "2006-01-02 15:04:05.000"
+	TraceIdHeaderKey = "X-Request-Id"
 )
 
 func FromRequest(req *http.Request) Logger {
@@ -25,7 +25,7 @@ func FromRequest(req *http.Request) Logger {
 	if ok && v != nil {
 		return v
 	}
-	traceId := req.Header.Get(TraceIdIdHeaderKey)
+	traceId := req.Header.Get(TraceIdHeaderKey)
 	if traceId == "" {
 		traceId = NewTraceId()
 	}

@@ -18,13 +18,13 @@ func main() {
 func httpHandler(w http.ResponseWriter, req *http.Request) {
 	// In general, it is a middleware
 	{
-		traceId := req.Header.Get(log.TraceIdIdHeaderKey)
+		traceId := req.Header.Get(log.TraceIdHeaderKey)
 		if traceId == "" {
 			traceId = log.NewTraceId()
-			req.Header.Set(log.TraceIdIdHeaderKey, traceId)
+			req.Header.Set(log.TraceIdHeaderKey, traceId)
 		}
 		req = req.WithContext(log.NewContext(req.Context(), log.New(traceId)))
-		// defer w.Header().Set(log.TraceIdIdHeaderKey, traceId)
+		// defer w.Header().Set(log.TraceIdHeaderKey, traceId)
 	}
 
 	l := log.FromRequest(req)
