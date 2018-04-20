@@ -1,0 +1,37 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "/s0yKOnnWipGU14DeuBCIPCvG+E=",
+			"path": "github.com/chanxuehong/internal",
+			"revision": "c1d8ef0f5517e0ec054ea9ba5aedb0094d9bbb6a",
+			"revisionTime": "2015-12-01T13:48:39Z"
+		},
+		{
+			"checksumSHA1": "zIeXn1g9mzNdQ75FKycZNPAPTyw=",
+			"path": "github.com/chanxuehong/rand",
+			"revision": "b54bf7f93440da0b6c81b05276d69cdcbf32c918",
+			"revisionTime": "2015-11-30T03:58:31Z"
+		},
+		{
+			"checksumSHA1": "MXCTHe116dDPvv0MRogEcqHqvhg=",
+			"path": "github.com/chanxuehong/uuid",
+			"revision": "86b7034b82976cd56c2faacb899e3654fd62331a",
+			"revisionTime": "2015-11-30T05:49:27Z"
+		},
+		{
+			"checksumSHA1": "2Mbb00b7ehI6irFwRl6UqpFOVYk=",
+			"path": "github.com/chanxuehong/uuid/internal/v1",
+			"revision": "86b7034b82976cd56c2faacb899e3654fd62331a",
+			"revisionTime": "2015-11-30T05:49:27Z"
+		},
+		{
+			"checksumSHA1": "pmTJgKPXP7yTmi4FnImNu1cz2t4=",
+			"path": "github.com/chanxuehong/uuid/internal/v5",
+			"revision": "86b7034b82976cd56c2faacb899e3654fd62331a",
+			"revisionTime": "2015-11-30T05:49:27Z"
+		}
+	],
+	"rootPath": "github.com/chanxuehong/log"
+}
