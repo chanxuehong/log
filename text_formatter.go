@@ -6,9 +6,11 @@ import (
 	"time"
 )
 
+var TextFormatter = &textFormatter{}
+
 type textFormatter struct{}
 
-func (f *textFormatter) Format(entry *entry) ([]byte, error) {
+func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
 	var buffer *bytes.Buffer
 	if entry.Buffer != nil {
 		buffer = entry.Buffer

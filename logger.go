@@ -21,9 +21,22 @@ const (
 	TraceIdHeaderKey = "X-Request-Id"
 )
 
+type loggerKey struct{}
+
+func FromContext(ctx context.Context) Logger {
+	if ctx == nil {
+		return New(WithTraceId(NewTraceId()))
+	}
+	v, ok := ctx.Value(loggerKey{}).(Logger)
+	if ok && v != nil {
+		return v
+	}
+	return New(WithTraceId(NewTraceId()))
+}
+
 func FromRequest(req *http.Request) Logger {
 	if req == nil {
-		return New(NewTraceId())
+		return New(WithTraceId(NewTraceId()))
 	}
 	v, ok := req.Context().Value(loggerKey{}).(Logger)
 	if ok && v != nil {
@@ -33,20 +46,7 @@ func FromRequest(req *http.Request) Logger {
 	if traceId == "" {
 		traceId = NewTraceId()
 	}
-	return New(traceId)
-}
-
-type loggerKey struct{}
-
-func FromContext(ctx context.Context) Logger {
-	if ctx == nil {
-		return New(NewTraceId())
-	}
-	v, ok := ctx.Value(loggerKey{}).(Logger)
-	if ok && v != nil {
-		return v
-	}
-	return New(NewTraceId())
+	return New(WithTraceId(NewTraceId()))
 }
 
 func NewContext(ctx context.Context, logger Logger) context.Context {
@@ -105,29 +105,58 @@ type Logger interface {
 	WithFields(fields ...interface{}) Logger
 }
 
-func New(traceId string) Logger { return _New(traceId) }
+type Option func(*options)
 
-func _New(traceId string) *logger {
-	return &logger{
-		traceId:   traceId,
-		fields:    nil,
-		out:       os.Stdout,
-		formatter: &textFormatter{},
+func WithTraceId(traceId string) Option {
+	return func(o *options) {
+		o.traceId = traceId
 	}
 }
 
+func WithOut(out io.Writer) Option {
+	return func(o *options) {
+		o.out = out
+	}
+}
+
+func WithFormatter(formatter Formatter) Option {
+	return func(o *options) {
+		o.formatter = formatter
+	}
+}
+
+func New(opts ...Option) Logger { return _New(opts) }
+
+func _New(opts []Option) *logger {
+	var l logger
+	for _, opt := range opts {
+		opt(&l.options)
+	}
+	if l.out == nil {
+		l.out = os.Stdout
+	}
+	if l.formatter == nil {
+		l.formatter = TextFormatter
+	}
+	return &l
+}
+
 type logger struct {
+	options
+	fields map[string]interface{}
+}
+
+type options struct {
 	traceId   string
-	fields    map[string]interface{}
 	out       io.Writer
-	formatter formatter
+	formatter Formatter
 }
 
-type formatter interface {
-	Format(entry *entry) ([]byte, error)
+type Formatter interface {
+	Format(entry *Entry) ([]byte, error)
 }
 
-type entry struct {
+type Entry struct {
 	Location string // function(file:line)
 	Time     time.Time
 	Level    Level
@@ -210,7 +239,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	data, err := l.formatter.Format(&entry{
+	data, err := l.formatter.Format(&Entry{
 		Location: location,
 		Time:     time.Now(),
 		Level:    level,
@@ -220,7 +249,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Buffer:   buffer,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to format entry, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
 		return
 	}
 	if _, err = l.out.Write(data); err != nil {
@@ -253,10 +282,8 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 	}
 	m[key] = value
 	return &logger{
-		traceId:   l.traceId,
-		fields:    m,
-		out:       l.out,
-		formatter: l.formatter,
+		options: l.options,
+		fields:  m,
 	}
 }
 func (l *logger) WithFields(fields ...interface{}) Logger {
@@ -288,10 +315,8 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		m2[k] = v
 	}
 	return &logger{
-		traceId:   l.traceId,
-		fields:    m2,
-		out:       l.out,
-		formatter: l.formatter,
+		options: l.options,
+		fields:  m2,
 	}
 }
 

@@ -1,6 +1,6 @@
 package log
 
-var _std = _New("")
+var _std = _New(nil)
 
 // Fatal logs a message at FatalLevel on the standard logger.
 // For more information see the Logger interface.
