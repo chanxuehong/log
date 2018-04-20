@@ -46,7 +46,7 @@ func FromRequest(req *http.Request) Logger {
 	if traceId == "" {
 		traceId = NewTraceId()
 	}
-	return New(WithTraceId(NewTraceId()))
+	return New(WithTraceId(traceId))
 }
 
 func NewContext(ctx context.Context, logger Logger) context.Context {
