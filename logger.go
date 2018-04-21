@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"runtime"
 	"strconv"
@@ -113,7 +112,9 @@ func WithTraceId(traceId string) Option {
 	}
 }
 
-func WithOut(out io.Writer) Option {
+// WithOutput sets the logger output.
+//  NOTE: out must be thread-safe, see ConcurrentWriter.
+func WithOutput(out io.Writer) Option {
 	return func(o *options) {
 		o.out = out
 	}
@@ -128,17 +129,15 @@ func WithFormatter(formatter Formatter) Option {
 func New(opts ...Option) Logger { return _New(opts) }
 
 func _New(opts []Option) *logger {
-	l := &logger{
-		options: &options{},
-	}
+	l := &logger{}
 	for _, opt := range opts {
 		if opt == nil {
 			continue
 		}
-		opt(l.options)
+		opt(&l.options)
 	}
 	if l.options.out == nil {
-		l.options.out = os.Stdout
+		l.options.out = concurrentStdout
 	}
 	if l.options.formatter == nil {
 		l.options.formatter = TextFormatter
@@ -147,16 +146,14 @@ func _New(opts []Option) *logger {
 }
 
 type logger struct {
-	options *options
+	options options
 	fields  map[string]interface{}
 }
 
 type options struct {
 	traceId   string
 	formatter Formatter
-
-	mutex sync.Mutex // protects following
-	out   io.Writer
+	out       io.Writer
 }
 
 type Formatter interface {
@@ -221,7 +218,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	} else {
 		m2, err := parseFields(fields)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+			fmt.Fprintf(concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 		}
 		if len(m2) == 0 {
 			m = l.fields
@@ -254,14 +251,12 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Buffer:   buffer,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(concurrentStderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
 		return
 	}
 
-	l.options.mutex.Lock()
-	defer l.options.mutex.Unlock()
 	if _, err = l.options.out.Write(data); err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
 }
@@ -321,7 +316,7 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
-		fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 	}
 	if len(m) == 0 {
 		return l
