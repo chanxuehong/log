@@ -128,31 +128,35 @@ func WithFormatter(formatter Formatter) Option {
 func New(opts ...Option) Logger { return _New(opts) }
 
 func _New(opts []Option) *logger {
-	var l logger
+	l := &logger{
+		options: &options{},
+	}
 	for _, opt := range opts {
 		if opt == nil {
 			continue
 		}
-		opt(&l.options)
+		opt(l.options)
 	}
-	if l.out == nil {
-		l.out = os.Stdout
+	if l.options.out == nil {
+		l.options.out = os.Stdout
 	}
-	if l.formatter == nil {
-		l.formatter = TextFormatter
+	if l.options.formatter == nil {
+		l.options.formatter = TextFormatter
 	}
-	return &l
+	return l
 }
 
 type logger struct {
-	options
-	fields map[string]interface{}
+	options *options
+	fields  map[string]interface{}
 }
 
 type options struct {
 	traceId   string
-	out       io.Writer
 	formatter Formatter
+
+	mutex sync.Mutex // protects following
+	out   io.Writer
 }
 
 type Formatter interface {
@@ -217,7 +221,9 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	} else {
 		m2, err := parseFields(fields)
 		if err != nil {
+			l.options.mutex.Lock()
 			fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+			l.options.mutex.Unlock()
 		}
 		if len(m2) == 0 {
 			m = l.fields
@@ -240,20 +246,25 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	data, err := l.formatter.Format(&Entry{
+	data, err := l.options.formatter.Format(&Entry{
 		Location: location,
 		Time:     time.Now(),
 		Level:    level,
-		TraceId:  l.traceId,
+		TraceId:  l.options.traceId,
 		Message:  msg,
 		Fields:   m,
 		Buffer:   buffer,
 	})
 	if err != nil {
+		l.options.mutex.Lock()
 		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
+		l.options.mutex.Unlock()
 		return
 	}
-	if _, err = l.out.Write(data); err != nil {
+
+	l.options.mutex.Lock()
+	defer l.options.mutex.Unlock()
+	if _, err = l.options.out.Write(data); err != nil {
 		fmt.Fprintf(os.Stderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
@@ -314,7 +325,9 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
+		l.options.mutex.Lock()
 		fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+		l.options.mutex.Unlock()
 	}
 	if len(m) == 0 {
 		return l
