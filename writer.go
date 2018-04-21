@@ -16,17 +16,17 @@ func ConcurrentWriter(w io.Writer) io.Writer {
 		return nil
 	}
 	return &concurrentWriter{
-		Writer: w,
+		w: w,
 	}
 }
 
 type concurrentWriter struct {
-	sync.Mutex
-	io.Writer
+	mu sync.Mutex
+	w  io.Writer
 }
 
 func (w *concurrentWriter) Write(p []byte) (n int, err error) {
-	w.Lock()
-	defer w.Unlock()
-	return w.Write(p)
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.w.Write(p)
 }
