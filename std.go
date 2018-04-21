@@ -37,3 +37,15 @@ func Debug(msg string, fields ...interface{}) {
 func Output(calldepth int, level Level, msg string, fields ...interface{}) {
 	_std.Output(calldepth+1, level, msg, fields...)
 }
+
+// WithField creates a new Logger from the standard Logger and adds a field to it.
+// For more information see the Logger interface.
+func WithField(key string, value interface{}) Logger {
+	return _std.WithField(key, value)
+}
+
+// WithFields creates a new Logger from the standard Logger and adds multiple fields to it.
+// For more information see the Logger interface.
+func WithFields(fields ...interface{}) Logger {
+	return _std.WithFields(fields...)
+}
