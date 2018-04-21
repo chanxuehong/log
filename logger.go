@@ -222,12 +222,16 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		if len(m2) == 0 {
 			m = l.fields
 		} else {
-			m = make(map[string]interface{}, len(l.fields)+len(m2))
-			for k, v := range l.fields {
-				m[k] = v
-			}
-			for k, v := range m2 {
-				m[k] = v
+			if len(l.fields) == 0 {
+				m = m2
+			} else {
+				m = make(map[string]interface{}, len(l.fields)+len(m2))
+				for k, v := range l.fields {
+					m[k] = v
+				}
+				for k, v := range m2 {
+					m[k] = v
+				}
 			}
 		}
 	}
@@ -281,6 +285,9 @@ func trimFileName(name string) string {
 }
 
 func (l *logger) WithField(key string, value interface{}) Logger {
+	if key == "" {
+		return l
+	}
 	m := make(map[string]interface{}, len(l.fields)+1)
 	for k, v := range l.fields {
 		m[k] = v
@@ -311,6 +318,12 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 	}
 	if len(m) == 0 {
 		return l
+	}
+	if len(l.fields) == 0 {
+		return &logger{
+			options: l.options,
+			fields:  m,
+		}
 	}
 	m2 := make(map[string]interface{}, len(l.fields)+len(m))
 	for k, v := range l.fields {
