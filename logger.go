@@ -221,9 +221,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	} else {
 		m2, err := parseFields(fields)
 		if err != nil {
-			l.options.mutex.Lock()
 			fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
-			l.options.mutex.Unlock()
 		}
 		if len(m2) == 0 {
 			m = l.fields
@@ -256,9 +254,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Buffer:   buffer,
 	})
 	if err != nil {
-		l.options.mutex.Lock()
 		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
-		l.options.mutex.Unlock()
 		return
 	}
 
@@ -325,9 +321,7 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
-		l.options.mutex.Lock()
 		fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
-		l.options.mutex.Unlock()
 	}
 	if len(m) == 0 {
 		return l
