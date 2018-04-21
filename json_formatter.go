@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-var JsonFormatter = &jsonFormatter{}
+var JsonFormatter Formatter = &jsonFormatter{}
 
 type jsonFormatter struct{}
 

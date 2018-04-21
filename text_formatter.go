@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var TextFormatter = &textFormatter{}
+var TextFormatter Formatter = &textFormatter{}
 
 type textFormatter struct{}
 

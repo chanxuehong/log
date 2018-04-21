@@ -130,6 +130,9 @@ func New(opts ...Option) Logger { return _New(opts) }
 func _New(opts []Option) *logger {
 	var l logger
 	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		opt(&l.options)
 	}
 	if l.out == nil {
@@ -180,12 +183,6 @@ func (l *logger) Info(msg string, fields ...interface{}) {
 }
 func (l *logger) Debug(msg string, fields ...interface{}) {
 	l.output(1, DebugLevel, msg, fields)
-}
-
-var _bufferPool = sync.Pool{
-	New: func() interface{} {
-		return bytes.NewBuffer(make([]byte, 0, 4<<10))
-	},
 }
 
 func (l *logger) Output(calldepth int, level Level, msg string, fields ...interface{}) {
@@ -258,6 +255,14 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	}
 }
 
+var _bufferPool = sync.Pool{
+	New: newBuffer,
+}
+
+func newBuffer() interface{} {
+	return bytes.NewBuffer(make([]byte, 0, 4<<10))
+}
+
 func trimFuncName(name string) string {
 	return path.Base(name)
 }
@@ -321,9 +326,9 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 }
 
 var (
-	_ErrNumberOfFieldsMustNotBeOdd = errors.New("the number of fields must not be odd")
-	_ErrTypeOfFieldKeyMustBeString = errors.New("the type of field key must be string")
-	_ErrFieldKeyMustNotBeEmpty     = errors.New("the field key must not be empty")
+	_ErrNumberOfFieldsMustNotBeOdd error = errors.New("the number of fields must not be odd")
+	_ErrTypeOfFieldKeyMustBeString error = errors.New("the type of field key must be string")
+	_ErrFieldKeyMustNotBeEmpty     error = errors.New("the field key must not be empty")
 )
 
 func parseFields(fields []interface{}) (map[string]interface{}, error) {
