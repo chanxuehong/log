@@ -264,7 +264,7 @@ var _bufferPool = sync.Pool{
 }
 
 func newBuffer() interface{} {
-	return bytes.NewBuffer(make([]byte, 0, 4<<10))
+	return bytes.NewBuffer(make([]byte, 0, 16<<10))
 }
 
 func trimFuncName(name string) string {

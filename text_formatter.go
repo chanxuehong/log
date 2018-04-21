@@ -15,7 +15,7 @@ func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
 	if entry.Buffer != nil {
 		buffer = entry.Buffer
 	} else {
-		buffer = bytes.NewBuffer(make([]byte, 0, 4<<10))
+		buffer = bytes.NewBuffer(make([]byte, 0, 16<<10))
 	}
 	if len(entry.Fields) > 0 {
 		prefixFieldClashes(entry.Fields)
