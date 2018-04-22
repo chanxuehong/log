@@ -5,26 +5,49 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/chanxuehong/log"
+	"github.com/chanxuehong/log/trace"
 )
 
+type mockResponseWriter struct {
+	http.ResponseWriter
+	header http.Header
+}
+
+func (w *mockResponseWriter) Header() http.Header {
+	return w.header
+}
+
 func main() {
-	req, _ := http.NewRequest(http.MethodGet, "http://a.com", nil)
-	httpHandler(nil, req)
+	req, _ := http.NewRequest(http.MethodGet, "http://www.example.com", nil)
+	w := &mockResponseWriter{
+		header: make(http.Header),
+	}
+	httpHandler(w, req)
 }
 
 func httpHandler(w http.ResponseWriter, req *http.Request) {
+	defer func() {
+		fmt.Println("debug", w.Header().Get(trace.TraceIdHeaderKey))
+	}()
+
 	// In general, it is a middleware
 	{
-		traceId := req.Header.Get(log.TraceIdHeaderKey)
+		// gets traceId from request header, if not exists, generates it.
+		traceId := req.Header.Get(trace.TraceIdHeaderKey)
 		if traceId == "" {
-			traceId = log.NewTraceId()
-			req.Header.Set(log.TraceIdHeaderKey, traceId)
+			traceId = trace.NewTraceId()
+			req.Header.Set(trace.TraceIdHeaderKey, traceId)
 		}
+		// sets traceId to response header
+		w.Header().Set(trace.TraceIdHeaderKey, traceId)
+		// adds traceId to request.Context
+		req = req.WithContext(trace.NewContext(req.Context(), traceId))
+		// adds log.Logger to request.Context
 		req = req.WithContext(log.NewContext(req.Context(), log.New(log.WithTraceId(traceId))))
-		// defer w.Header().Set(log.TraceIdHeaderKey, traceId)
 	}
 
 	l := log.FromRequest(req)
@@ -63,11 +86,12 @@ func fn3(ctx context.Context) {
 ```
 
 ```Text
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.httpHandler(test1/main.go:28), msg=1.info message
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.httpHandler(test1/main.go:29), msg=2.info message, key1=1, key2=2
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.httpHandler(test1/main.go:33), msg=3.info message, key3=3, key4=4, key5=5
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.fn1(test1/main.go:41), msg=4.info message, key3=3, key4=4, key5=5
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.fn1(test1/main.go:42), msg=5.info message, key4=4, key6=6, key5=5, key3=3
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.fn2(test1/main.go:51), msg=6.info message, key5=5, key8=8, key7=7, key3=3, key4=4
-time=2018-04-20 14:02:36.539, level=info, request_id=6ca969ca446011e89d5fb4d5bdb21e16, location=main.fn3(test1/main.go:58), msg=7.info message, key9=9, key5=5, key7=7, key3=3, key4=4
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.httpHandler(test1/main.go:51), msg=1.info message
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.httpHandler(test1/main.go:52), msg=2.info message, key1=1, key2=2
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.httpHandler(test1/main.go:56), msg=3.info message, key3=3, key4=4, key5=5
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn1(test1/main.go:64), msg=4.info message, key5=5, key3=3, key4=4
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn1(test1/main.go:65), msg=5.info message, key5=5, key6=6, key3=3, key4=4
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn2(test1/main.go:74), msg=6.info message, key3=3, key4=4, key5=5, key7=7, key8=8
+time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn3(test1/main.go:81), msg=7.info message, key5=5, key7=7, key9=9, key3=3, key4=4
+debug e2089ad445ce11e89296b4d5bdb21e16
 ```

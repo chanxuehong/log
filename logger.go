@@ -13,38 +13,35 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/chanxuehong/log/trace"
 )
 
-const (
-	TimeFormatLayout = "2006-01-02 15:04:05.000"
-	TraceIdHeaderKey = "X-Request-Id"
-)
+const TimeFormatLayout = "2006-01-02 15:04:05.000"
 
-type loggerKey struct{}
+type loggerContextKey struct{}
 
 func FromContext(ctx context.Context) Logger {
 	if ctx == nil {
-		return New(WithTraceId(NewTraceId()))
+		return New(WithTraceId(trace.NewTraceId()))
 	}
-	v, ok := ctx.Value(loggerKey{}).(Logger)
+	v, ok := ctx.Value(loggerContextKey{}).(Logger)
 	if ok && v != nil {
 		return v
 	}
-	return New(WithTraceId(NewTraceId()))
+	traceId := trace.FromContext(ctx)
+	return New(WithTraceId(traceId))
 }
 
 func FromRequest(req *http.Request) Logger {
 	if req == nil {
-		return New(WithTraceId(NewTraceId()))
+		return New(WithTraceId(trace.NewTraceId()))
 	}
-	v, ok := req.Context().Value(loggerKey{}).(Logger)
+	v, ok := req.Context().Value(loggerContextKey{}).(Logger)
 	if ok && v != nil {
 		return v
 	}
-	traceId := req.Header.Get(TraceIdHeaderKey)
-	if traceId == "" {
-		traceId = NewTraceId()
-	}
+	traceId := trace.FromRequest(req)
 	return New(WithTraceId(traceId))
 }
 
@@ -53,12 +50,12 @@ func NewContext(ctx context.Context, logger Logger) context.Context {
 		return ctx
 	}
 	if ctx == nil {
-		return context.WithValue(context.Background(), loggerKey{}, logger)
+		return context.WithValue(context.Background(), loggerContextKey{}, logger)
 	}
-	if v, ok := ctx.Value(loggerKey{}).(Logger); ok && v == logger {
+	if v, ok := ctx.Value(loggerContextKey{}).(Logger); ok && v == logger {
 		return ctx
 	}
-	return context.WithValue(ctx, loggerKey{}, logger)
+	return context.WithValue(ctx, loggerContextKey{}, logger)
 }
 
 type Logger interface {
