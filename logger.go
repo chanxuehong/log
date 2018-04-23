@@ -132,6 +132,27 @@ func WithLevel(level Level) Option {
 	}
 }
 
+func WithLevelString(str string) Option {
+	return func(o *options) {
+		var level Level
+		switch strings.ToLower(str) {
+		case DebugLevelString:
+			level = DebugLevel
+		case InfoLevelString:
+			level = InfoLevel
+		case WarnLevelString:
+			level = WarnLevel
+		case ErrorLevelString:
+			level = ErrorLevel
+		case FatalLevelString:
+			level = FatalLevel
+		default:
+			return
+		}
+		o.level = level
+	}
+}
+
 func New(opts ...Option) Logger { return _New(opts) }
 
 func _New(opts []Option) *logger {
