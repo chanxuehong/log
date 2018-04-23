@@ -15,6 +15,13 @@ const (
 	DebugLevel
 )
 
+func isValidLevel(level Level) bool {
+	return level >= FatalLevel && level <= DebugLevel
+}
+func isLevelEnabled(level, loggerLevel Level) bool {
+	return loggerLevel >= level
+}
+
 const (
 	FatalLevelString = "fatal"
 	ErrorLevelString = "error"
@@ -23,11 +30,21 @@ const (
 	DebugLevelString = "debug"
 )
 
-func isValidLevel(level Level) bool {
-	return level >= FatalLevel && level <= DebugLevel
-}
-func isLevelEnabled(level, loggerLevel Level) bool {
-	return loggerLevel >= level
+func parseLevelString(str string) (level Level, ok bool) {
+	switch strings.ToLower(str) {
+	case DebugLevelString:
+		return DebugLevel, true
+	case InfoLevelString:
+		return InfoLevel, true
+	case WarnLevelString:
+		return WarnLevel, true
+	case ErrorLevelString:
+		return ErrorLevel, true
+	case FatalLevelString:
+		return FatalLevel, true
+	default:
+		return InvalidLevel, false
+	}
 }
 
 type Level uint
@@ -60,19 +77,8 @@ func SetLevel(level Level) error {
 
 // SetLevelString sets the standard logger level.
 func SetLevelString(str string) error {
-	var level Level
-	switch strings.ToLower(str) {
-	case DebugLevelString:
-		level = DebugLevel
-	case InfoLevelString:
-		level = InfoLevel
-	case WarnLevelString:
-		level = WarnLevel
-	case ErrorLevelString:
-		level = ErrorLevel
-	case FatalLevelString:
-		level = FatalLevel
-	default:
+	level, ok := parseLevelString(str)
+	if !ok {
 		return fmt.Errorf("invalid level string: %q", str)
 	}
 	setLevel(level)

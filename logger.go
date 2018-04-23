@@ -134,19 +134,8 @@ func WithLevel(level Level) Option {
 
 func WithLevelString(str string) Option {
 	return func(o *options) {
-		var level Level
-		switch strings.ToLower(str) {
-		case DebugLevelString:
-			level = DebugLevel
-		case InfoLevelString:
-			level = InfoLevel
-		case WarnLevelString:
-			level = WarnLevel
-		case ErrorLevelString:
-			level = ErrorLevel
-		case FatalLevelString:
-			level = FatalLevel
-		default:
+		level, ok := parseLevelString(str)
+		if !ok {
 			return
 		}
 		o.level = level
