@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	FatalLevel Level = iota
+	InvalidLevel Level = iota // InvalidLevel must equal 0
+	FatalLevel
 	ErrorLevel
 	WarnLevel
 	InfoLevel
@@ -25,8 +26,8 @@ const (
 func isValidLevel(level Level) bool {
 	return level >= FatalLevel && level <= DebugLevel
 }
-func isLevelEnabled(level Level) bool {
-	return getLevel() >= level
+func isLevelEnabled(level, loggerLevel Level) bool {
+	return loggerLevel >= level
 }
 
 type Level uint
@@ -48,6 +49,7 @@ func (level Level) String() string {
 	}
 }
 
+// SetLevel sets the standard logger level.
 func SetLevel(level Level) error {
 	if !isValidLevel(level) {
 		return fmt.Errorf("invalid level: %d", level)
@@ -56,6 +58,7 @@ func SetLevel(level Level) error {
 	return nil
 }
 
+// SetLevelString sets the standard logger level.
 func SetLevelString(str string) error {
 	var level Level
 	switch strings.ToLower(str) {

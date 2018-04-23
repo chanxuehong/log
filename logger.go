@@ -110,16 +110,25 @@ func WithTraceId(traceId string) Option {
 }
 
 // WithOutput sets the logger output.
-//  NOTE: out must be thread-safe, see ConcurrentWriter.
-func WithOutput(out io.Writer) Option {
+//  NOTE: output must be thread-safe, see ConcurrentWriter.
+func WithOutput(output io.Writer) Option {
 	return func(o *options) {
-		o.out = out
+		o.output = output
 	}
 }
 
 func WithFormatter(formatter Formatter) Option {
 	return func(o *options) {
 		o.formatter = formatter
+	}
+}
+
+func WithLevel(level Level) Option {
+	return func(o *options) {
+		if !isValidLevel(level) {
+			return
+		}
+		o.level = level
 	}
 }
 
@@ -133,11 +142,17 @@ func _New(opts []Option) *logger {
 		}
 		opt(&l.options)
 	}
-	if l.options.out == nil {
-		l.options.out = concurrentStdout
-	}
-	if l.options.formatter == nil {
-		l.options.formatter = TextFormatter
+	// set the default options for non-standard loggers
+	if _std != nil {
+		if l.options.formatter == nil {
+			l.options.formatter = TextFormatter
+		}
+		if l.options.output == nil {
+			l.options.output = concurrentStdout
+		}
+		if l.options.level == InvalidLevel {
+			l.options.level = DebugLevel
+		}
 	}
 	return l
 }
@@ -149,12 +164,34 @@ type logger struct {
 
 type options struct {
 	traceId   string
-	formatter Formatter
-	out       io.Writer
+	formatter Formatter // please use options.getFormatter to obtain this field
+	output    io.Writer // please use options.getOutput to obtain this field
+	level     Level     // please use options.getLevel to obtain this field
 }
 
 type Formatter interface {
 	Format(entry *Entry) ([]byte, error)
+}
+
+func (o *options) getFormatter() Formatter {
+	if formatter := o.formatter; formatter != nil {
+		return formatter
+	}
+	return getFormatter()
+}
+
+func (o *options) getOutput() io.Writer {
+	if output := o.output; output != nil {
+		return output
+	}
+	return getOutput()
+}
+
+func (o *options) getLevel() Level {
+	if level := o.level; level != InvalidLevel {
+		return level
+	}
+	return getLevel()
 }
 
 type Entry struct {
@@ -194,7 +231,7 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 }
 
 func (l *logger) output(calldepth int, level Level, msg string, fields []interface{}) {
-	if !isLevelEnabled(level) {
+	if !isLevelEnabled(level, l.options.getLevel()) {
 		return
 	}
 
@@ -238,7 +275,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	data, err := l.options.formatter.Format(&Entry{
+	data, err := l.options.getFormatter().Format(&Entry{
 		Location: location,
 		Time:     time.Now(),
 		Level:    level,
@@ -252,7 +289,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		return
 	}
 
-	if _, err = l.options.out.Write(data); err != nil {
+	if _, err = l.options.getOutput().Write(data); err != nil {
 		fmt.Fprintf(concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
