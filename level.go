@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"strings"
-	"sync/atomic"
 )
 
 const (
@@ -64,33 +63,4 @@ func (level Level) String() string {
 	default:
 		return fmt.Sprintf("unknown_%d", level)
 	}
-}
-
-// SetLevel sets the standard logger level.
-func SetLevel(level Level) error {
-	if !isValidLevel(level) {
-		return fmt.Errorf("invalid level: %d", level)
-	}
-	setLevel(level)
-	return nil
-}
-
-// SetLevelString sets the standard logger level.
-func SetLevelString(str string) error {
-	level, ok := parseLevelString(str)
-	if !ok {
-		return fmt.Errorf("invalid level string: %q", str)
-	}
-	setLevel(level)
-	return nil
-}
-
-var _level = uint64(DebugLevel) // default is debug
-
-func setLevel(level Level) {
-	atomic.StoreUint64(&_level, uint64(level))
-}
-
-func getLevel() Level {
-	return Level(atomic.LoadUint64(&_level))
 }

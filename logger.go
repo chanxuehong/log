@@ -172,6 +172,7 @@ type logger struct {
 	fields  map[string]interface{}
 }
 
+// For the standard logger, all fields of options are zero value.
 type options struct {
 	traceId   string
 	formatter Formatter // please use options.getFormatter to obtain this field
