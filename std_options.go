@@ -4,18 +4,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
-	"sync/atomic"
 )
-
-var _stdOptions struct {
-	formatterMutex sync.RWMutex
-	formatter      Formatter
-
-	outputMutex sync.RWMutex
-	output      io.Writer
-
-	level uint64 // Level
-}
 
 func init() {
 	SetFormatter(TextFormatter)
@@ -23,11 +12,16 @@ func init() {
 	SetLevel(DebugLevel)
 }
 
-func getFormatter() Formatter {
-	_stdOptions.formatterMutex.RLock()
-	formatter := _stdOptions.formatter
-	_stdOptions.formatterMutex.RUnlock()
-	return formatter
+var _stdOptions struct {
+	sync.RWMutex
+	options
+}
+
+func getStdOptions() (opts options) {
+	_stdOptions.RLock()
+	opts = _stdOptions.options
+	_stdOptions.RUnlock()
+	return
 }
 
 // SetFormatter sets the standard logger formatter.
@@ -35,16 +29,9 @@ func SetFormatter(formatter Formatter) {
 	if formatter == nil {
 		return
 	}
-	_stdOptions.formatterMutex.Lock()
+	_stdOptions.Lock()
 	_stdOptions.formatter = formatter
-	_stdOptions.formatterMutex.Unlock()
-}
-
-func getOutput() io.Writer {
-	_stdOptions.outputMutex.RLock()
-	output := _stdOptions.output
-	_stdOptions.outputMutex.RUnlock()
-	return output
+	_stdOptions.Unlock()
 }
 
 // SetOutput sets the standard logger output.
@@ -53,17 +40,15 @@ func SetOutput(output io.Writer) {
 	if output == nil {
 		return
 	}
-	_stdOptions.outputMutex.Lock()
+	_stdOptions.Lock()
 	_stdOptions.output = output
-	_stdOptions.outputMutex.Unlock()
-}
-
-func getLevel() Level {
-	return Level(atomic.LoadUint64(&_stdOptions.level))
+	_stdOptions.Unlock()
 }
 
 func setLevel(level Level) {
-	atomic.StoreUint64(&_stdOptions.level, uint64(level))
+	_stdOptions.Lock()
+	_stdOptions.level = level
+	_stdOptions.Unlock()
 }
 
 // SetLevel sets the standard logger level.

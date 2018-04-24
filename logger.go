@@ -142,18 +142,17 @@ func WithLevelString(str string) Option {
 	}
 }
 
-func New(opts ...Option) Logger { return _New(opts) }
+func New(opts ...Option) Logger { return _New(opts, false) }
 
-func _New(opts []Option) *logger {
+func _New(opts []Option, std bool) *logger {
 	l := &logger{}
-	for _, opt := range opts {
-		if opt == nil {
-			continue
+	if !std {
+		for _, opt := range opts {
+			if opt == nil {
+				continue
+			}
+			opt(&l.options)
 		}
-		opt(&l.options)
-	}
-	// set the default options for non-standard loggers
-	if _std != nil {
 		if l.options.formatter == nil {
 			l.options.formatter = TextFormatter
 		}
@@ -168,41 +167,19 @@ func _New(opts []Option) *logger {
 }
 
 type logger struct {
-	options options
+	options options // for the standard logger, all fields of options are zero value.
 	fields  map[string]interface{}
 }
 
-// For the standard logger, all fields of options are zero value.
 type options struct {
 	traceId   string
-	formatter Formatter // please use options.getFormatter to obtain this field
-	output    io.Writer // please use options.getOutput to obtain this field
-	level     Level     // please use options.getLevel to obtain this field
+	formatter Formatter
+	output    io.Writer
+	level     Level
 }
 
 type Formatter interface {
 	Format(entry *Entry) ([]byte, error)
-}
-
-func (o *options) getFormatter() Formatter {
-	if formatter := o.formatter; formatter != nil {
-		return formatter
-	}
-	return getFormatter()
-}
-
-func (o *options) getOutput() io.Writer {
-	if output := o.output; output != nil {
-		return output
-	}
-	return getOutput()
-}
-
-func (o *options) getLevel() Level {
-	if level := o.level; level != InvalidLevel {
-		return level
-	}
-	return getLevel()
 }
 
 type Entry struct {
@@ -242,7 +219,13 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 }
 
 func (l *logger) output(calldepth int, level Level, msg string, fields []interface{}) {
-	if !isLevelEnabled(level, l.options.getLevel()) {
+	var opts options
+	if l.options.formatter != nil {
+		opts = l.options
+	} else {
+		opts = getStdOptions()
+	}
+	if !isLevelEnabled(level, opts.level) {
 		return
 	}
 
@@ -286,11 +269,11 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	data, err := l.options.getFormatter().Format(&Entry{
+	data, err := opts.formatter.Format(&Entry{
 		Location: location,
 		Time:     time.Now(),
 		Level:    level,
-		TraceId:  l.options.traceId,
+		TraceId:  opts.traceId,
 		Message:  msg,
 		Fields:   m,
 		Buffer:   buffer,
@@ -300,7 +283,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		return
 	}
 
-	if _, err = l.options.getOutput().Write(data); err != nil {
+	if _, err = opts.output.Write(data); err != nil {
 		fmt.Fprintf(concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
