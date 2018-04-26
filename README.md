@@ -22,10 +22,10 @@ func (w *mockResponseWriter) Header() http.Header {
 }
 
 func main() {
-	req, _ := http.NewRequest(http.MethodGet, "http://www.example.com", nil)
 	w := &mockResponseWriter{
 		header: make(http.Header),
 	}
+	req, _ := http.NewRequest(http.MethodGet, "http://www.example.com", nil)
 	httpHandler(w, req)
 }
 
@@ -86,12 +86,12 @@ func fn3(ctx context.Context) {
 ```
 
 ```Text
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.httpHandler(test1/main.go:51), msg=1.info message
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.httpHandler(test1/main.go:52), msg=2.info message, key1=1, key2=2
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.httpHandler(test1/main.go:56), msg=3.info message, key3=3, key4=4, key5=5
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn1(test1/main.go:64), msg=4.info message, key5=5, key3=3, key4=4
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn1(test1/main.go:65), msg=5.info message, key5=5, key6=6, key3=3, key4=4
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn2(test1/main.go:74), msg=6.info message, key3=3, key4=4, key5=5, key7=7, key8=8
-time=2018-04-22 09:45:49.259, level=info, request_id=e2089ad445ce11e89296b4d5bdb21e16, location=main.fn3(test1/main.go:81), msg=7.info message, key5=5, key7=7, key9=9, key3=3, key4=4
-debug e2089ad445ce11e89296b4d5bdb21e16
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.httpHandler(test1/main.go:51), msg=1.info message
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.httpHandler(test1/main.go:52), msg=2.info message, key1=1, key2=2
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.httpHandler(test1/main.go:56), msg=3.info message, key3=3, key4=4, key5=5
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn1(test1/main.go:64), msg=4.info message, key3=3, key4=4, key5=5
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn1(test1/main.go:65), msg=5.info message, key3=3, key4=4, key5=5, key6=6
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn2(test1/main.go:74), msg=6.info message, key3=3, key4=4, key5=5, key7=7, key8=8
+time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn3(test1/main.go:81), msg=7.info message, key3=3, key4=4, key5=5, key7=7, key9=9
+debug aa3e3839495411e8bc49b4d5bdb21e16
 ```

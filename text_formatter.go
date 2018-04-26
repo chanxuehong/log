@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -25,7 +26,14 @@ func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
 	f.appendKeyValue(buffer, fieldKeyTraceId, entry.TraceId)
 	f.appendKeyValue(buffer, fieldKeyLocation, entry.Location)
 	f.appendKeyValue(buffer, fieldKeyMessage, entry.Message)
-	for k, v := range entry.Fields {
+
+	keys := make([]string, 0, len(entry.Fields))
+	for k := range entry.Fields {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		v := entry.Fields[k]
 		f.appendKeyValue(buffer, k, v)
 	}
 	buffer.WriteByte('\n')
