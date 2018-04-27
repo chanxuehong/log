@@ -7,6 +7,10 @@ import (
 	"github.com/chanxuehong/uuid"
 )
 
+type Tracer interface {
+	TraceId() string
+}
+
 func NewTraceId() string {
 	return string(uuid.NewV1().HexEncode())
 }

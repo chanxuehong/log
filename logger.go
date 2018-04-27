@@ -403,3 +403,9 @@ func parseFields(fields []interface{}) (map[string]interface{}, error) {
 	}
 	return m, nil
 }
+
+var _ trace.Tracer = (*logger)(nil)
+
+func (l *logger) TraceId() string {
+	return l.options.traceId
+}
