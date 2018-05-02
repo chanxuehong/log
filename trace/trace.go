@@ -45,6 +45,14 @@ func FromRequest(req *http.Request) string {
 	return NewTraceId()
 }
 
+func FromHeader(header http.Header) string {
+	traceId := header.Get(TraceIdHeaderKey)
+	if traceId != "" {
+		return traceId
+	}
+	return NewTraceId()
+}
+
 func NewContext(ctx context.Context, traceId string) context.Context {
 	if traceId == "" {
 		return ctx

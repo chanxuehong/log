@@ -45,6 +45,11 @@ func FromRequest(req *http.Request) Logger {
 	return New(WithTraceId(traceId))
 }
 
+func FromHeader(header http.Header) Logger {
+	traceId := trace.FromHeader(header)
+	return New(WithTraceId(traceId))
+}
+
 func NewContext(ctx context.Context, logger Logger) context.Context {
 	if logger == nil {
 		return ctx
