@@ -188,7 +188,7 @@ func _New(opts []Option) *logger {
 }
 
 type logger struct {
-	mu      sync.Mutex // ensures atomic writes; protects the following fields
+	mu      sync.Mutex // ensures atomic writes; protects the following options field
 	options options
 	fields  map[string]interface{}
 }
@@ -250,6 +250,12 @@ func (l *logger) setLevel(level Level) {
 	l.options.level = level
 	l.mu.Unlock()
 }
+func (l *logger) getOptions() (opts options) {
+	l.mu.Lock()
+	opts = l.options
+	l.mu.Unlock()
+	return
+}
 
 func (l *logger) Fatal(msg string, fields ...interface{}) {
 	l.output(1, FatalLevel, msg, fields)
@@ -278,12 +284,10 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 }
 
 func (l *logger) output(calldepth int, level Level, msg string, fields []interface{}) {
-	l.mu.Lock()
-	if !isLevelEnabled(level, l.options.level) {
-		l.mu.Unlock()
+	opts := l.getOptions()
+	if !isLevelEnabled(level, opts.level) {
 		return
 	}
-	l.mu.Unlock()
 
 	var location string
 	if pc, file, line, ok := runtime.Caller(calldepth + 1); ok {
@@ -296,8 +300,6 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		location = "???"
 	}
 
-	l.mu.Lock()
-	defer l.mu.Unlock()
 	var m map[string]interface{}
 	if len(fields) == 0 {
 		m = l.fields
@@ -327,11 +329,11 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	data, err := l.options.formatter.Format(&Entry{
+	data, err := opts.formatter.Format(&Entry{
 		Location: location,
 		Time:     time.Now(),
 		Level:    level,
-		TraceId:  l.options.traceId,
+		TraceId:  opts.traceId,
 		Message:  msg,
 		Fields:   m,
 		Buffer:   buffer,
@@ -340,7 +342,9 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
 		return
 	}
-	if _, err = l.options.output.Write(data); err != nil {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if _, err = opts.output.Write(data); err != nil {
 		fmt.Fprintf(os.Stderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
@@ -375,15 +379,13 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 	if key == "" {
 		return l
 	}
-	l.mu.Lock()
-	defer l.mu.Unlock()
 	m := make(map[string]interface{}, len(l.fields)+1)
 	for k, v := range l.fields {
 		m[k] = v
 	}
 	m[key] = value
 	return &logger{
-		options: l.options,
+		options: l.getOptions(),
 		fields:  m,
 	}
 }
@@ -408,11 +410,9 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 	if len(m) == 0 {
 		return l
 	}
-	l.mu.Lock()
-	defer l.mu.Unlock()
 	if len(l.fields) == 0 {
 		return &logger{
-			options: l.options,
+			options: l.getOptions(),
 			fields:  m,
 		}
 	}
@@ -424,7 +424,7 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		m2[k] = v
 	}
 	return &logger{
-		options: l.options,
+		options: l.getOptions(),
 		fields:  m2,
 	}
 }
@@ -468,8 +468,5 @@ func parseFields(fields []interface{}) (map[string]interface{}, error) {
 var _ trace.Tracer = (*logger)(nil)
 
 func (l *logger) TraceId() string {
-	l.mu.Lock()
-	val := l.options.traceId
-	l.mu.Unlock()
-	return val
+	return l.getOptions().traceId
 }
