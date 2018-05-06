@@ -87,24 +87,5 @@ func (f *textFormatter) appendValue(b *bytes.Buffer, value interface{}) {
 	if !ok {
 		stringVal = fmt.Sprint(value)
 	}
-	if !f.needsQuoting(stringVal) {
-		b.WriteString(stringVal)
-	} else {
-		b.WriteString(fmt.Sprintf("%q", stringVal))
-	}
-}
-
-func (f *textFormatter) needsQuoting(text string) bool {
-	//if len(text) == 0 {
-	//	return true
-	//}
-	//for _, ch := range text {
-	//	if !((ch >= 'a' && ch <= 'z') ||
-	//		(ch >= 'A' && ch <= 'Z') ||
-	//		(ch >= '0' && ch <= '9') ||
-	//		ch == '-' || ch == '.' || ch == '_' || ch == '/' || ch == '@' || ch == '^' || ch == '+') {
-	//		return true
-	//	}
-	//}
-	return false
+	b.WriteString(stringVal)
 }

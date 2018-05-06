@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"runtime"
 	"strconv"
@@ -104,6 +105,18 @@ type Logger interface {
 	// WithFields creates a new Logger from the current Logger and adds multiple fields to it.
 	// The requirements for fields can see the comments of Fatal.
 	WithFields(fields ...interface{}) Logger
+
+	// SetFormatter sets the logger formatter.
+	SetFormatter(formatter Formatter)
+
+	// SetOutput sets the logger output.
+	SetOutput(output io.Writer)
+
+	// SetLevel sets the logger level.
+	SetLevel(level Level) error
+
+	// SetLevelString sets the logger level.
+	SetLevelString(str string) error
 }
 
 type Option func(*options)
@@ -115,15 +128,20 @@ func WithTraceId(traceId string) Option {
 }
 
 // WithOutput sets the logger output.
-//  NOTE: output must be thread-safe, see ConcurrentWriter.
 func WithOutput(output io.Writer) Option {
 	return func(o *options) {
+		if output == nil {
+			return
+		}
 		o.output = output
 	}
 }
 
 func WithFormatter(formatter Formatter) Option {
 	return func(o *options) {
+		if formatter == nil {
+			return
+		}
 		o.formatter = formatter
 	}
 }
@@ -147,32 +165,31 @@ func WithLevelString(str string) Option {
 	}
 }
 
-func New(opts ...Option) Logger { return _New(opts, false) }
+func New(opts ...Option) Logger { return _New(opts) }
 
-func _New(opts []Option, std bool) *logger {
+func _New(opts []Option) *logger {
 	l := &logger{}
-	if !std {
-		for _, opt := range opts {
-			if opt == nil {
-				continue
-			}
-			opt(&l.options)
+	for _, opt := range opts {
+		if opt == nil {
+			continue
 		}
-		if l.options.formatter == nil {
-			l.options.formatter = TextFormatter
-		}
-		if l.options.output == nil {
-			l.options.output = concurrentStdout
-		}
-		if l.options.level == InvalidLevel {
-			l.options.level = DebugLevel
-		}
+		opt(&l.options)
+	}
+	if l.options.formatter == nil {
+		l.options.formatter = TextFormatter
+	}
+	if l.options.output == nil {
+		l.options.output = os.Stdout
+	}
+	if l.options.level == InvalidLevel {
+		l.options.level = DebugLevel
 	}
 	return l
 }
 
 type logger struct {
-	options options // for the standard logger, all fields of options are zero value.
+	mu      sync.Mutex // ensures atomic writes; protects the following fields
+	options options
 	fields  map[string]interface{}
 }
 
@@ -195,6 +212,43 @@ type Entry struct {
 	Message  string
 	Fields   map[string]interface{}
 	Buffer   *bytes.Buffer
+}
+
+func (l *logger) SetFormatter(formatter Formatter) {
+	if formatter == nil {
+		return
+	}
+	l.mu.Lock()
+	l.options.formatter = formatter
+	l.mu.Unlock()
+}
+func (l *logger) SetOutput(output io.Writer) {
+	if output == nil {
+		return
+	}
+	l.mu.Lock()
+	l.options.output = output
+	l.mu.Unlock()
+}
+func (l *logger) SetLevel(level Level) error {
+	if !isValidLevel(level) {
+		return fmt.Errorf("invalid level: %d", level)
+	}
+	l.setLevel(level)
+	return nil
+}
+func (l *logger) SetLevelString(str string) error {
+	level, ok := parseLevelString(str)
+	if !ok {
+		return fmt.Errorf("invalid level string: %q", str)
+	}
+	l.setLevel(level)
+	return nil
+}
+func (l *logger) setLevel(level Level) {
+	l.mu.Lock()
+	l.options.level = level
+	l.mu.Unlock()
 }
 
 func (l *logger) Fatal(msg string, fields ...interface{}) {
@@ -224,15 +278,12 @@ func (l *logger) Output(calldepth int, level Level, msg string, fields ...interf
 }
 
 func (l *logger) output(calldepth int, level Level, msg string, fields []interface{}) {
-	var opts options
-	if l.options.formatter != nil {
-		opts = l.options
-	} else {
-		opts = getStdOptions()
-	}
-	if !isLevelEnabled(level, opts.level) {
+	l.mu.Lock()
+	if !isLevelEnabled(level, l.options.level) {
+		l.mu.Unlock()
 		return
 	}
+	l.mu.Unlock()
 
 	var location string
 	if pc, file, line, ok := runtime.Caller(calldepth + 1); ok {
@@ -245,13 +296,15 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		location = "???"
 	}
 
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	var m map[string]interface{}
 	if len(fields) == 0 {
 		m = l.fields
 	} else {
 		m2, err := parseFields(fields)
 		if err != nil {
-			fmt.Fprintf(concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+			fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 		}
 		if len(m2) == 0 {
 			m = l.fields
@@ -274,22 +327,21 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	defer _bufferPool.Put(buffer)
 	buffer.Reset()
 
-	data, err := opts.formatter.Format(&Entry{
+	data, err := l.options.formatter.Format(&Entry{
 		Location: location,
 		Time:     time.Now(),
 		Level:    level,
-		TraceId:  opts.traceId,
+		TraceId:  l.options.traceId,
 		Message:  msg,
 		Fields:   m,
 		Buffer:   buffer,
 	})
 	if err != nil {
-		fmt.Fprintf(concurrentStderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
 		return
 	}
-
-	if _, err = opts.output.Write(data); err != nil {
-		fmt.Fprintf(concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
+	if _, err = l.options.output.Write(data); err != nil {
+		fmt.Fprintf(os.Stderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
 }
@@ -323,6 +375,8 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 	if key == "" {
 		return l
 	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	m := make(map[string]interface{}, len(l.fields)+1)
 	for k, v := range l.fields {
 		m[k] = v
@@ -349,11 +403,13 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
-		fmt.Fprintf(concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 	}
 	if len(m) == 0 {
 		return l
 	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if len(l.fields) == 0 {
 		return &logger{
 			options: l.options,
@@ -412,5 +468,8 @@ func parseFields(fields []interface{}) (map[string]interface{}, error) {
 var _ trace.Tracer = (*logger)(nil)
 
 func (l *logger) TraceId() string {
-	return l.options.traceId
+	l.mu.Lock()
+	val := l.options.traceId
+	l.mu.Unlock()
+	return val
 }

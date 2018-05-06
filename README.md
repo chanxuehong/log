@@ -5,7 +5,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/chanxuehong/log"
@@ -31,7 +30,7 @@ func main() {
 
 func httpHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
-		fmt.Println("debug", w.Header().Get(trace.TraceIdHeaderKey))
+		log.Debug("debug", "trace_id", w.Header().Get(trace.TraceIdHeaderKey))
 	}()
 
 	// In general, it is a middleware
@@ -86,12 +85,12 @@ func fn3(ctx context.Context) {
 ```
 
 ```Text
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.httpHandler(test1/main.go:51), msg=1.info message
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.httpHandler(test1/main.go:52), msg=2.info message, key1=1, key2=2
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.httpHandler(test1/main.go:56), msg=3.info message, key3=3, key4=4, key5=5
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn1(test1/main.go:64), msg=4.info message, key3=3, key4=4, key5=5
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn1(test1/main.go:65), msg=5.info message, key3=3, key4=4, key5=5, key6=6
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn2(test1/main.go:74), msg=6.info message, key3=3, key4=4, key5=5, key7=7, key8=8
-time=2018-04-26 21:21:01.708, level=info, request_id=aa3e3839495411e8bc49b4d5bdb21e16, location=main.fn3(test1/main.go:81), msg=7.info message, key3=3, key4=4, key5=5, key7=7, key9=9
-debug aa3e3839495411e8bc49b4d5bdb21e16
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.httpHandler(test1/main.go:50), msg=1.info message
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.httpHandler(test1/main.go:51), msg=2.info message, key1=1, key2=2
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.httpHandler(test1/main.go:55), msg=3.info message, key3=3, key4=4, key5=5
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.fn1(test1/main.go:63), msg=4.info message, key3=3, key4=4, key5=5
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.fn1(test1/main.go:64), msg=5.info message, key3=3, key4=4, key5=5, key6=6
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.fn2(test1/main.go:73), msg=6.info message, key3=3, key4=4, key5=5, key7=7, key8=8
+time=2018-05-06 21:35:10.824, level=info, request_id=4c7c9afa513211e884bfb4d5bdb21e16, location=main.fn3(test1/main.go:80), msg=7.info message, key3=3, key4=4, key5=5, key7=7, key9=9
+time=2018-05-06 21:35:10.824, level=debug, request_id=, location=main.httpHandler.func1(test1/main.go:30), msg=debug, trace_id=4c7c9afa513211e884bfb4d5bdb21e16
 ```

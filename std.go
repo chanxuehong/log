@@ -1,6 +1,8 @@
 package log
 
-var _std = _New(nil, true)
+import "io"
+
+var _std = _New(nil)
 
 // Fatal logs a message at FatalLevel on the standard logger.
 // For more information see the Logger interface.
@@ -48,4 +50,24 @@ func WithField(key string, value interface{}) Logger {
 // For more information see the Logger interface.
 func WithFields(fields ...interface{}) Logger {
 	return _std.WithFields(fields...)
+}
+
+// SetFormatter sets the standard logger formatter.
+func SetFormatter(formatter Formatter) {
+	_std.SetFormatter(formatter)
+}
+
+// SetOutput sets the standard logger output.
+func SetOutput(output io.Writer) {
+	_std.SetOutput(output)
+}
+
+// SetLevel sets the standard logger level.
+func SetLevel(level Level) error {
+	return _std.SetLevel(level)
+}
+
+// SetLevelString sets the standard logger level.
+func SetLevelString(str string) error {
+	return _std.SetLevelString(str)
 }
