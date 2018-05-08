@@ -8,9 +8,9 @@ import (
 
 func TestFormatTime(t *testing.T) {
 	now := time.Now()
-	have := FormatTime(now)
+	have := FormatTimeString(now)
 	want := now.Format(TimeFormatLayout)
-	if have := string(have[:]); have != want {
+	if have != want {
 		t.Errorf("have:%s, want:%s", have, want)
 		return
 	}
