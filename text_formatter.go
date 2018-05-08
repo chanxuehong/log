@@ -21,7 +21,7 @@ func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
 	if len(entry.Fields) > 0 {
 		prefixFieldClashes(entry.Fields)
 	}
-	f.appendKeyValue(buffer, fieldKeyTime, entry.Time.In(_beijingLocation).Format(TimeFormatLayout))
+	f.appendKeyValue(buffer, fieldKeyTime, FormatTimeString(entry.Time.In(_beijingLocation)))
 	f.appendKeyValue(buffer, fieldKeyLevel, entry.Level.String())
 	f.appendKeyValue(buffer, fieldKeyTraceId, entry.TraceId)
 	f.appendKeyValue(buffer, fieldKeyLocation, entry.Location)

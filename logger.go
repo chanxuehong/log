@@ -18,8 +18,6 @@ import (
 	"github.com/chanxuehong/log/trace"
 )
 
-const TimeFormatLayout = "2006-01-02 15:04:05.000"
-
 type loggerContextKey struct{}
 
 func FromContext(ctx context.Context) Logger {
