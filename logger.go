@@ -323,8 +323,9 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		}
 	}
 
-	buffer := _bufferPool.Get().(*bytes.Buffer)
-	defer _bufferPool.Put(buffer)
+	pool := getBytesBufferPool()
+	buffer := pool.Get()
+	defer pool.Put(buffer)
 	buffer.Reset()
 
 	data, err := opts.formatter.Format(&Entry{
@@ -344,14 +345,6 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		fmt.Fprintf(_concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
-}
-
-var _bufferPool = sync.Pool{
-	New: newBuffer,
-}
-
-func newBuffer() interface{} {
-	return bytes.NewBuffer(make([]byte, 0, 16<<10))
 }
 
 func trimFuncName(name string) string {
