@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"runtime"
 	"strconv"
@@ -126,6 +125,7 @@ func WithTraceId(traceId string) Option {
 }
 
 // WithOutput sets the logger output.
+//  NOTE: output must be thread-safe, see ConcurrentWriter.
 func WithOutput(output io.Writer) Option {
 	return func(o *options) {
 		if output == nil {
@@ -177,7 +177,7 @@ func _New(opts []Option) *logger {
 		l.options.formatter = TextFormatter
 	}
 	if l.options.output == nil {
-		l.options.output = os.Stdout
+		l.options.output = _concurrentStdout
 	}
 	if l.options.level == InvalidLevel {
 		l.options.level = DebugLevel
@@ -304,7 +304,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	} else {
 		m2, err := parseFields(fields)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+			fmt.Fprintf(_concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 		}
 		if len(m2) == 0 {
 			m = l.fields
@@ -337,13 +337,11 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Buffer:   buffer,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(_concurrentStderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
 		return
 	}
-	l.mu.Lock()
-	defer l.mu.Unlock()
 	if _, err = opts.output.Write(data); err != nil {
-		fmt.Fprintf(os.Stderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(_concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
 }
@@ -403,7 +401,7 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
-		fmt.Fprintf(os.Stderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(_concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
 	}
 	if len(m) == 0 {
 		return l

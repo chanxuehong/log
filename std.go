@@ -58,6 +58,7 @@ func SetFormatter(formatter Formatter) {
 }
 
 // SetOutput sets the standard logger output.
+//  NOTE: output must be thread-safe, see ConcurrentWriter.
 func SetOutput(output io.Writer) {
 	_std.SetOutput(output)
 }
