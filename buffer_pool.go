@@ -27,11 +27,11 @@ func getBytesBufferPool() BytesBufferPool {
 var _BytesBufferPoolPtr unsafe.Pointer // *BytesBufferPool
 
 func init() {
-	SetBytesBufferPool(newBytesBufferPool())
+	SetBytesBufferPool(_NewBytesBufferPool())
 }
 
-func newBytesBufferPool() BytesBufferPool {
-	return &bytesBufferPool{
+func _NewBytesBufferPool() BytesBufferPool {
+	return &_BytesBufferPool{
 		pool: sync.Pool{
 			New: func() interface{} {
 				return bytes.NewBuffer(make([]byte, 0, 16<<10))
@@ -40,15 +40,15 @@ func newBytesBufferPool() BytesBufferPool {
 	}
 }
 
-type bytesBufferPool struct {
+type _BytesBufferPool struct {
 	pool sync.Pool
 }
 
-func (p *bytesBufferPool) Get() *bytes.Buffer {
+func (p *_BytesBufferPool) Get() *bytes.Buffer {
 	return p.pool.Get().(*bytes.Buffer)
 }
 
-func (p *bytesBufferPool) Put(x *bytes.Buffer) {
+func (p *_BytesBufferPool) Put(x *bytes.Buffer) {
 	if x == nil {
 		return
 	}
