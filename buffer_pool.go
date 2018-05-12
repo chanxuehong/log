@@ -12,6 +12,8 @@ type BytesBufferPool interface {
 	Put(x *bytes.Buffer)
 }
 
+var _BytesBufferPoolPtr unsafe.Pointer = unsafe.Pointer(&defaultBytesBufferPool)
+
 func SetBytesBufferPool(pool BytesBufferPool) {
 	if pool == nil {
 		return
@@ -24,11 +26,7 @@ func getBytesBufferPool() BytesBufferPool {
 	return *ptr
 }
 
-var _BytesBufferPoolPtr unsafe.Pointer // *BytesBufferPool
-
-func init() {
-	SetBytesBufferPool(_NewBytesBufferPool())
-}
+var defaultBytesBufferPool BytesBufferPool = _NewBytesBufferPool()
 
 func _NewBytesBufferPool() BytesBufferPool {
 	return &_BytesBufferPool{
