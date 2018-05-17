@@ -23,15 +23,15 @@ func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
 	f.appendKeyValue(buffer, fieldKeyTraceId, entry.TraceId)
 	f.appendKeyValue(buffer, fieldKeyLocation, entry.Location)
 	f.appendKeyValue(buffer, fieldKeyMessage, entry.Message)
-	if len(entry.Fields) > 0 {
-		prefixFieldClashes(entry.Fields)
-		keys := make([]string, 0, len(entry.Fields))
-		for k := range entry.Fields {
+	if fields := entry.Fields; len(fields) > 0 {
+		prefixFieldClashes(fields)
+		keys := make([]string, 0, len(fields))
+		for k := range fields {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
-			v := entry.Fields[k]
+			v := fields[k]
 			f.appendKeyValue(buffer, k, v)
 		}
 	}

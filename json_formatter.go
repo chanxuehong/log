@@ -17,9 +17,13 @@ func (f *jsonFormatter) Format(entry *Entry) ([]byte, error) {
 		buffer = bytes.NewBuffer(make([]byte, 0, 16<<10))
 	}
 	var fields map[string]interface{}
-	if len(entry.Fields) > 0 {
-		prefixFieldClashes(entry.Fields)
-		fields = entry.Fields
+	if fields = entry.Fields; len(fields) > 0 {
+		prefixFieldClashes(fields)
+		for k, v := range fields {
+			if vv, ok := v.(error); ok {
+				fields[k] = vv.Error()
+			}
+		}
 	} else {
 		fields = make(map[string]interface{}, 8)
 	}
