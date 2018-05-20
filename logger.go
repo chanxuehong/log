@@ -298,29 +298,9 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		location = "???"
 	}
 
-	var m map[string]interface{}
-	if len(fields) == 0 {
-		m = l.fields
-	} else {
-		m2, err := parseFields(fields)
-		if err != nil {
-			fmt.Fprintf(_concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
-		}
-		if len(m2) == 0 {
-			m = l.fields
-		} else {
-			if len(l.fields) == 0 {
-				m = m2
-			} else {
-				m = make(map[string]interface{}, len(l.fields)+len(m2))
-				for k, v := range l.fields {
-					m[k] = v
-				}
-				for k, v := range m2 {
-					m[k] = v
-				}
-			}
-		}
+	combinedFields, err := combineFields(l.fields, fields)
+	if err != nil {
+		fmt.Fprintf(_concurrentStderr, "log: failed to combine fields, error=%v, location=%s\n", err, location)
 	}
 
 	pool := getBytesBufferPool()
@@ -334,7 +314,7 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Level:    level,
 		TraceId:  opts.traceId,
 		Message:  msg,
-		Fields:   m,
+		Fields:   combinedFields,
 		Buffer:   buffer,
 	})
 	if err != nil {
@@ -352,21 +332,27 @@ func trimFuncName(name string) string {
 }
 
 func trimFileName(name string) string {
-	i := strings.Index(name, "/src/")
-	if i < 0 {
+	i := strings.Index(name, "/src/") + len("/src/")
+	if i < len("/src/") || i >= len(name) /* BCE */ {
 		return name
 	}
-	name = name[i+len("/src/"):]
-	i = strings.Index(name, "/vendor/")
-	if i < 0 {
+	name = name[i:]
+	i = strings.Index(name, "/vendor/") + len("/vendor/")
+	if i < len("/vendor/") || i >= len(name) /* BCE */ {
 		return name
 	}
-	return name[i+len("/vendor/"):]
+	return name[i:]
 }
 
 func (l *logger) WithField(key string, value interface{}) Logger {
 	if key == "" {
 		return l
+	}
+	if len(l.fields) == 0 {
+		return &logger{
+			options: l.getOptions(),
+			fields:  map[string]interface{}{key: value},
+		}
 	}
 	m := make(map[string]interface{}, len(l.fields)+1)
 	for k, v := range l.fields {
@@ -378,11 +364,12 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 		fields:  m,
 	}
 }
+
 func (l *logger) WithFields(fields ...interface{}) Logger {
 	if len(fields) == 0 {
 		return l
 	}
-	m, err := parseFields(fields)
+	m, err := combineFields(l.fields, fields)
 	if err != nil {
 		var location string
 		if pc, file, line, ok := runtime.Caller(1); ok {
@@ -394,27 +381,11 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 		} else {
 			location = "???"
 		}
-		fmt.Fprintf(_concurrentStderr, "log: failed to parse fields, error=%v, location=%s\n", err, location)
-	}
-	if len(m) == 0 {
-		return l
-	}
-	if len(l.fields) == 0 {
-		return &logger{
-			options: l.getOptions(),
-			fields:  m,
-		}
-	}
-	m2 := make(map[string]interface{}, len(l.fields)+len(m))
-	for k, v := range l.fields {
-		m2[k] = v
-	}
-	for k, v := range m {
-		m2[k] = v
+		fmt.Fprintf(_concurrentStderr, "log: failed to combine fields, error=%v, location=%s\n", err, location)
 	}
 	return &logger{
 		options: l.getOptions(),
-		fields:  m2,
+		fields:  m,
 	}
 }
 
@@ -424,34 +395,47 @@ var (
 	_ErrFieldKeyMustNotBeEmpty     error = errors.New("the field key must not be empty")
 )
 
-func parseFields(fields []interface{}) (map[string]interface{}, error) {
+func combineFields(m map[string]interface{}, fields []interface{}) (map[string]interface{}, error) {
 	if len(fields) == 0 {
-		return nil, nil
+		return copyFields(m), nil
 	}
 	if len(fields)&1 != 0 {
-		return nil, _ErrNumberOfFieldsMustNotBeOdd
+		return copyFields(m), _ErrNumberOfFieldsMustNotBeOdd
 	}
 
-	// 采用下面的实现可以避免边界检查.
+	m2 := make(map[string]interface{}, 8+len(m)+len(fields)>>1)
+	for k, v := range m {
+		m2[k] = v
+	}
 	var (
 		k  string
 		ok bool
-		m  = make(map[string]interface{}, len(fields)>>1)
 	)
 	for i, v := range fields {
 		if i&1 == 0 { // key
 			k, ok = v.(string)
 			if !ok {
-				return m, _ErrTypeOfFieldKeyMustBeString
+				return m2, _ErrTypeOfFieldKeyMustBeString
 			}
 			if k == "" {
-				return m, _ErrFieldKeyMustNotBeEmpty
+				return m2, _ErrFieldKeyMustNotBeEmpty
 			}
 		} else { // value
-			m[k] = v
+			m2[k] = v
 		}
 	}
-	return m, nil
+	return m2, nil
+}
+
+func copyFields(fields map[string]interface{}) map[string]interface{} {
+	if len(fields) == 0 {
+		return nil
+	}
+	m := make(map[string]interface{}, len(fields))
+	for k, v := range fields {
+		m[k] = v
+	}
+	return m
 }
 
 var _ trace.Tracer = (*logger)(nil)

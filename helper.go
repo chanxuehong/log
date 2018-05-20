@@ -20,7 +20,7 @@ func JSON(v interface{}) string {
 	data := buffer.Bytes()
 	// remove the trailing newline
 	i := len(data) - 1
-	if i < 0 {
+	if i < 0 || i >= len(data) /* BCE */ {
 		return ""
 	}
 	if data[i] == '\n' {
