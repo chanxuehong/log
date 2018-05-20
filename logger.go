@@ -43,11 +43,43 @@ func FromContext(ctx context.Context) (lg Logger, ok bool) {
 	return nil, false
 }
 
+func MustFromContext(ctx context.Context) Logger {
+	lg, ok := FromContext(ctx)
+	if !ok {
+		panic("log: failed to get from context.Context")
+	}
+	return lg
+}
+
+func FromContextOrNew(ctx context.Context, new func() Logger) Logger {
+	lg, ok := FromContext(ctx)
+	if !ok {
+		return new()
+	}
+	return lg
+}
+
 func FromRequest(req *http.Request) (lg Logger, ok bool) {
 	if req == nil {
 		return nil, false
 	}
 	return FromContext(req.Context())
+}
+
+func MustFromRequest(req *http.Request) Logger {
+	lg, ok := FromRequest(req)
+	if !ok {
+		panic("log: failed to get from http.Request")
+	}
+	return lg
+}
+
+func FromRequestOrNew(req *http.Request, new func() Logger) Logger {
+	lg, ok := FromRequest(req)
+	if !ok {
+		return new()
+	}
+	return lg
 }
 
 type Logger interface {

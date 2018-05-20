@@ -14,6 +14,7 @@ func JSON(v interface{}) string {
 	buffer := pool.Get()
 	defer pool.Put(buffer)
 	buffer.Reset()
+
 	if err := json.NewEncoder(buffer).Encode(v); err != nil {
 		return ""
 	}
@@ -38,6 +39,7 @@ func XML(v interface{}) string {
 	buffer := pool.Get()
 	defer pool.Put(buffer)
 	buffer.Reset()
+
 	if err := xml.NewEncoder(buffer).Encode(v); err != nil {
 		return ""
 	}
