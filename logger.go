@@ -333,15 +333,16 @@ func trimFuncName(name string) string {
 }
 
 func trimFileName(name string) string {
-	i := strings.LastIndex(name, "/vendor/") + len("/vendor/")
-	if i >= len("/vendor/") && i < len(name) /* BCE */ {
-		return name[i:]
+	i := strings.Index(name, "/src/") + len("/src/")
+	if i < len("/src/") || i >= len(name) /* BCE */ {
+		return name
 	}
-	i = strings.Index(name, "/src/") + len("/src/")
-	if i >= len("/src/") && i < len(name) /* BCE */ {
-		return name[i:]
+	name = name[i:]
+	i = strings.LastIndex(name, "/vendor/") + len("/vendor/")
+	if i < len("/vendor/") || i >= len(name) /* BCE */ {
+		return name
 	}
-	return name
+	return name[i:]
 }
 
 func (l *logger) WithField(key string, value interface{}) Logger {
