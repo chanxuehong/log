@@ -19,35 +19,6 @@ import (
 
 type loggerContextKey struct{}
 
-func FromContext(ctx context.Context) Logger {
-	if ctx == nil {
-		return New(WithTraceId(trace.NewTraceId()))
-	}
-	v, ok := ctx.Value(loggerContextKey{}).(Logger)
-	if ok && v != nil {
-		return v
-	}
-	traceId := trace.FromContext(ctx)
-	return New(WithTraceId(traceId))
-}
-
-func FromRequest(req *http.Request) Logger {
-	if req == nil {
-		return New(WithTraceId(trace.NewTraceId()))
-	}
-	v, ok := req.Context().Value(loggerContextKey{}).(Logger)
-	if ok && v != nil {
-		return v
-	}
-	traceId := trace.FromRequest(req)
-	return New(WithTraceId(traceId))
-}
-
-func FromHeader(header http.Header) Logger {
-	traceId := trace.FromHeader(header)
-	return New(WithTraceId(traceId))
-}
-
 func NewContext(ctx context.Context, logger Logger) context.Context {
 	if logger == nil {
 		return ctx
@@ -59,6 +30,24 @@ func NewContext(ctx context.Context, logger Logger) context.Context {
 		return ctx
 	}
 	return context.WithValue(ctx, loggerContextKey{}, logger)
+}
+
+func FromContext(ctx context.Context) (lg Logger, ok bool) {
+	if ctx == nil {
+		return nil, false
+	}
+	lg, ok = ctx.Value(loggerContextKey{}).(Logger)
+	if ok && lg != nil {
+		return lg, true
+	}
+	return nil, false
+}
+
+func FromRequest(req *http.Request) (lg Logger, ok bool) {
+	if req == nil {
+		return nil, false
+	}
+	return FromContext(req.Context())
 }
 
 type Logger interface {

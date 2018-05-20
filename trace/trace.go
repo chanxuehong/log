@@ -17,42 +17,6 @@ func NewTraceId() string {
 
 type traceIdContextKey struct{}
 
-func FromContext(ctx context.Context) string {
-	if ctx == nil {
-		return NewTraceId()
-	}
-	traceId, ok := ctx.Value(traceIdContextKey{}).(string)
-	if ok && traceId != "" {
-		return traceId
-	}
-	return NewTraceId()
-}
-
-const TraceIdHeaderKey = "X-Request-Id"
-
-func FromRequest(req *http.Request) string {
-	if req == nil {
-		return NewTraceId()
-	}
-	traceId, ok := req.Context().Value(traceIdContextKey{}).(string)
-	if ok && traceId != "" {
-		return traceId
-	}
-	traceId = req.Header.Get(TraceIdHeaderKey)
-	if traceId != "" {
-		return traceId
-	}
-	return NewTraceId()
-}
-
-func FromHeader(header http.Header) string {
-	traceId := header.Get(TraceIdHeaderKey)
-	if traceId != "" {
-		return traceId
-	}
-	return NewTraceId()
-}
-
 func NewContext(ctx context.Context, traceId string) context.Context {
 	if traceId == "" {
 		return ctx
@@ -64,4 +28,36 @@ func NewContext(ctx context.Context, traceId string) context.Context {
 		return ctx
 	}
 	return context.WithValue(ctx, traceIdContextKey{}, traceId)
+}
+
+func FromContext(ctx context.Context) (traceId string, ok bool) {
+	if ctx == nil {
+		return "", false
+	}
+	traceId, ok = ctx.Value(traceIdContextKey{}).(string)
+	if ok && traceId != "" {
+		return traceId, true
+	}
+	return "", false
+}
+
+func FromRequest(req *http.Request) (traceId string, ok bool) {
+	if req == nil {
+		return "", false
+	}
+	traceId, ok = FromContext(req.Context())
+	if ok {
+		return traceId, true
+	}
+	return FromHeader(req.Header)
+}
+
+const TraceIdHeaderKey = "X-Request-Id"
+
+func FromHeader(header http.Header) (traceId string, ok bool) {
+	traceId = header.Get(TraceIdHeaderKey)
+	if traceId != "" {
+		return traceId, true
+	}
+	return "", false
 }
