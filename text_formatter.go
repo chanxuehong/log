@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -68,23 +69,63 @@ const (
 
 func prefixFieldClashes(data map[string]interface{}) {
 	if v, ok := data[fieldKeyTime]; ok {
-		data["fields."+fieldKeyTime] = v
 		delete(data, fieldKeyTime)
+		newKey := "fields." + fieldKeyTime
+		for key, i := newKey, 2; ; i++ {
+			_, ok = data[key]
+			if !ok {
+				data[key] = v
+				break
+			}
+			key = newKey + "." + strconv.Itoa(i)
+		}
 	}
 	if v, ok := data[fieldKeyLevel]; ok {
-		data["fields."+fieldKeyLevel] = v
 		delete(data, fieldKeyLevel)
+		newKey := "fields." + fieldKeyLevel
+		for key, i := newKey, 2; ; i++ {
+			_, ok = data[key]
+			if !ok {
+				data[key] = v
+				break
+			}
+			key = newKey + "." + strconv.Itoa(i)
+		}
 	}
 	if v, ok := data[fieldKeyTraceId]; ok {
-		data["fields."+fieldKeyTraceId] = v
 		delete(data, fieldKeyTraceId)
+		newKey := "fields." + fieldKeyTraceId
+		for key, i := newKey, 2; ; i++ {
+			_, ok = data[key]
+			if !ok {
+				data[key] = v
+				break
+			}
+			key = newKey + "." + strconv.Itoa(i)
+		}
 	}
 	if v, ok := data[fieldKeyLocation]; ok {
-		data["fields."+fieldKeyLocation] = v
 		delete(data, fieldKeyLocation)
+		newKey := "fields." + fieldKeyLocation
+		for key, i := newKey, 2; ; i++ {
+			_, ok = data[key]
+			if !ok {
+				data[key] = v
+				break
+			}
+			key = newKey + "." + strconv.Itoa(i)
+		}
 	}
 	if v, ok := data[fieldKeyMessage]; ok {
-		data["fields."+fieldKeyMessage] = v
 		delete(data, fieldKeyMessage)
+		newKey := "fields." + fieldKeyMessage
+		for key, i := newKey, 2; ; i++ {
+			_, ok = data[key]
+			if !ok {
+				data[key] = v
+				break
+			}
+			key = newKey + "." + strconv.Itoa(i)
+		}
 	}
 }
