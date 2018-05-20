@@ -397,10 +397,10 @@ var (
 
 func combineFields(m map[string]interface{}, fields []interface{}) (map[string]interface{}, error) {
 	if len(fields) == 0 {
-		return copyFields(m), nil
+		return cloneFields(m), nil
 	}
 	if len(fields)&1 != 0 {
-		return copyFields(m), _ErrNumberOfFieldsMustNotBeOdd
+		return cloneFields(m), _ErrNumberOfFieldsMustNotBeOdd
 	}
 
 	m2 := make(map[string]interface{}, 8+len(m)+len(fields)>>1)
@@ -427,7 +427,7 @@ func combineFields(m map[string]interface{}, fields []interface{}) (map[string]i
 	return m2, nil
 }
 
-func copyFields(fields map[string]interface{}) map[string]interface{} {
+func cloneFields(fields map[string]interface{}) map[string]interface{} {
 	if len(fields) == 0 {
 		return nil
 	}
