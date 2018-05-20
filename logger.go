@@ -186,9 +186,10 @@ func _New(opts []Option) *logger {
 }
 
 type logger struct {
-	mu      sync.Mutex // ensures atomic writes; protects the following options field
+	mu      sync.RWMutex // protects the following options field
 	options options
-	fields  map[string]interface{}
+
+	fields map[string]interface{}
 }
 
 type options struct {
@@ -249,9 +250,9 @@ func (l *logger) setLevel(level Level) {
 	l.mu.Unlock()
 }
 func (l *logger) getOptions() (opts options) {
-	l.mu.Lock()
+	l.mu.RLock()
 	opts = l.options
-	l.mu.Unlock()
+	l.mu.RUnlock()
 	return
 }
 
@@ -332,16 +333,15 @@ func trimFuncName(name string) string {
 }
 
 func trimFileName(name string) string {
-	i := strings.Index(name, "/src/") + len("/src/")
-	if i < len("/src/") || i >= len(name) /* BCE */ {
-		return name
+	i := strings.LastIndex(name, "/vendor/") + len("/vendor/")
+	if i >= len("/vendor/") && i < len(name) /* BCE */ {
+		return name[i:]
 	}
-	name = name[i:]
-	i = strings.Index(name, "/vendor/") + len("/vendor/")
-	if i < len("/vendor/") || i >= len(name) /* BCE */ {
-		return name
+	i = strings.Index(name, "/src/") + len("/src/")
+	if i >= len("/src/") && i < len(name) /* BCE */ {
+		return name[i:]
 	}
-	return name[i:]
+	return name
 }
 
 func (l *logger) WithField(key string, value interface{}) Logger {
