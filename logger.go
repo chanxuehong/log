@@ -403,7 +403,7 @@ func combineFields(m map[string]interface{}, fields []interface{}) (map[string]i
 		return cloneFields(m), _ErrNumberOfFieldsMustNotBeOdd
 	}
 
-	m2 := make(map[string]interface{}, 8+len(m)+len(fields)>>1)
+	m2 := make(map[string]interface{}, 8+len(m)+len(fields)>>1) // 8 is reserved for the standard field
 	for k, v := range m {
 		m2[k] = v
 	}
