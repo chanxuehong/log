@@ -151,6 +151,15 @@ func WithTraceId(traceId string) Option {
 	}
 }
 
+func WithTraceIdFunc(fn func() string) Option {
+	return func(o *options) {
+		if fn == nil {
+			return
+		}
+		o.traceId = fn()
+	}
+}
+
 // WithOutput sets the logger output.
 //  NOTE: output must be thread-safe, see ConcurrentWriter.
 func WithOutput(output io.Writer) Option {
@@ -194,13 +203,11 @@ func New(opts ...Option) Logger { return _New(opts) }
 
 func _New(opts []Option) *logger {
 	l := &logger{}
-	if fn := getDefaultOptionsFunc(); fn != nil {
-		for _, opt := range fn() {
-			if opt == nil {
-				continue
-			}
-			opt(&l.options)
+	for _, opt := range getDefaultOptions() {
+		if opt == nil {
+			continue
 		}
+		opt(&l.options)
 	}
 	for _, opt := range opts {
 		if opt == nil {

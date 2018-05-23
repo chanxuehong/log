@@ -5,19 +5,19 @@ import (
 	"unsafe"
 )
 
-type OptionsFunc func() []Option
+type Options []Option
 
-var _defaultOptionsFuncPtr unsafe.Pointer // *OptionsFunc
+var _defaultOptionsPtr unsafe.Pointer // *Options
 
-func SetDefaultOptionsFunc(fn OptionsFunc) {
-	if fn == nil {
+func SetDefaultOptions(opts Options) {
+	if opts == nil {
 		return
 	}
-	atomic.StorePointer(&_defaultOptionsFuncPtr, unsafe.Pointer(&fn))
+	atomic.StorePointer(&_defaultOptionsPtr, unsafe.Pointer(&opts))
 }
 
-func getDefaultOptionsFunc() OptionsFunc {
-	ptr := (*OptionsFunc)(atomic.LoadPointer(&_defaultOptionsFuncPtr))
+func getDefaultOptions() Options {
+	ptr := (*Options)(atomic.LoadPointer(&_defaultOptionsPtr))
 	if ptr != nil {
 		return *ptr
 	}
