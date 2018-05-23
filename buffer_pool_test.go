@@ -38,7 +38,7 @@ func TestSetBytesBufferPool(t *testing.T) {
 	}
 
 	SetBytesBufferPool(&testBytesBufferPool{})
-	defer SetBytesBufferPool(defaultBytesBufferPool)
+	defer SetBytesBufferPool(_defaultBytesBufferPool)
 
 	pool = getBytesBufferPool()
 	if _, ok := pool.(*testBytesBufferPool); !ok {

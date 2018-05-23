@@ -53,10 +53,13 @@ func MustFromContext(ctx context.Context) Logger {
 
 func FromContextOrNew(ctx context.Context, new func() Logger) Logger {
 	lg, ok := FromContext(ctx)
-	if !ok {
+	if ok {
+		return lg
+	}
+	if new != nil {
 		return new()
 	}
-	return lg
+	return New()
 }
 
 func FromRequest(req *http.Request) (lg Logger, ok bool) {
@@ -76,10 +79,13 @@ func MustFromRequest(req *http.Request) Logger {
 
 func FromRequestOrNew(req *http.Request, new func() Logger) Logger {
 	lg, ok := FromRequest(req)
-	if !ok {
+	if ok {
+		return lg
+	}
+	if new != nil {
 		return new()
 	}
-	return lg
+	return New()
 }
 
 type Logger interface {
@@ -188,6 +194,14 @@ func New(opts ...Option) Logger { return _New(opts) }
 
 func _New(opts []Option) *logger {
 	l := &logger{}
+	if fn := getDefaultOptionsFunc(); fn != nil {
+		for _, opt := range fn() {
+			if opt == nil {
+				continue
+			}
+			opt(&l.options)
+		}
+	}
 	for _, opt := range opts {
 		if opt == nil {
 			continue
