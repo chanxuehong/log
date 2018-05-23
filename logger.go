@@ -51,15 +51,15 @@ func MustFromContext(ctx context.Context) Logger {
 	return lg
 }
 
-func FromContextOrNew(ctx context.Context, new func() Logger) Logger {
+func FromContextOrNew(ctx context.Context, new func() Logger) (lg Logger, isNew bool) {
 	lg, ok := FromContext(ctx)
 	if ok {
-		return lg
+		return lg, false
 	}
 	if new != nil {
-		return new()
+		return new(), true
 	}
-	return New()
+	return New(), true
 }
 
 func FromRequest(req *http.Request) (lg Logger, ok bool) {
@@ -77,15 +77,15 @@ func MustFromRequest(req *http.Request) Logger {
 	return lg
 }
 
-func FromRequestOrNew(req *http.Request, new func() Logger) Logger {
+func FromRequestOrNew(req *http.Request, new func() Logger) (lg Logger, isNew bool) {
 	lg, ok := FromRequest(req)
 	if ok {
-		return lg
+		return lg, false
 	}
 	if new != nil {
-		return new()
+		return new(), true
 	}
-	return New()
+	return New(), true
 }
 
 type Logger interface {
