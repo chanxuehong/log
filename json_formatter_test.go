@@ -12,12 +12,12 @@ func TestJsonFormatter_Format(t *testing.T) {
 		Location: "function(file:line)",
 		Time:     time.Date(2018, time.May, 20, 8, 20, 30, 666000000, time.UTC),
 		Level:    InfoLevel,
-		TraceId:  "trace_id_1234567890",
-		Message:  "message_1234567890",
+		TraceId:  "trace_id_123456789",
+		Message:  "message_123456789",
 		Fields: map[string]interface{}{
 			"key1":           "fields_value1",
 			"key2":           "fields_value2",
-			"key3":           &testError{X: "1234567890"}, // error
+			"key3":           &testError{X: "123456789"}, // error
 			fieldKeyTime:     "time",
 			fieldKeyLevel:    "level",
 			fieldKeyTraceId:  "request_id",
@@ -43,9 +43,9 @@ func TestJsonFormatter_Format(t *testing.T) {
 	want := map[string]string{
 		"time":              "2018-05-20 16:20:30.666",
 		"level":             "info",
-		"request_id":        "trace_id_1234567890",
+		"request_id":        "trace_id_123456789",
 		"location":          "function(file:line)",
-		"msg":               "message_1234567890",
+		"msg":               "message_123456789",
 		"fields.level":      "level",
 		"fields.location":   "location",
 		"fields.msg":        "msg",
@@ -53,7 +53,7 @@ func TestJsonFormatter_Format(t *testing.T) {
 		"fields.time":       "time",
 		"key1":              "fields_value1",
 		"key2":              "fields_value2",
-		"key3":              "test_error",
+		"key3":              "test_error_123456789", // error
 	}
 	if !reflect.DeepEqual(have, want) {
 		t.Errorf("\nhave:%v\nwant:%v", have, want)
@@ -66,5 +66,5 @@ type testError struct {
 }
 
 func (e *testError) Error() string {
-	return "test_error"
+	return "test_error_123456789"
 }

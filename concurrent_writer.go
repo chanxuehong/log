@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	_concurrentStdout io.Writer = ConcurrentWriter(os.Stdout)
-	_concurrentStderr io.Writer = ConcurrentWriter(os.Stderr)
+	ConcurrentStdout io.Writer = ConcurrentWriter(os.Stdout)
+	ConcurrentStderr io.Writer = ConcurrentWriter(os.Stderr)
 )
 
 // ConcurrentWriter wraps an io.Writer and returns a concurrent io.Writer.

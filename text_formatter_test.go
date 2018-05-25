@@ -9,14 +9,14 @@ import (
 func TestTextFormatter_Format(t *testing.T) {
 	entry := &Entry{
 		Location: "function(file:line)",
-		Time:     time.Date(2018, time.May, 20, 8, 20, 30, 666000000, time.UTC),
+		Time:     time.Date(2018, time.May, 20, 8, 20, 30, 666777888, time.UTC),
 		Level:    InfoLevel,
-		TraceId:  "trace_id_1234567890",
-		Message:  "message_1234567890",
+		TraceId:  "trace_id_123456789",
+		Message:  "message_123456789",
 		Fields: map[string]interface{}{
 			"key1":           "fields_value1",
 			"key2":           "fields_value2",
-			"key3":           "fields_value3",
+			"key3":           &testError{X: "123456789"}, // error
 			fieldKeyTime:     "time",
 			fieldKeyLevel:    "level",
 			fieldKeyTraceId:  "request_id",
@@ -30,9 +30,9 @@ func TestTextFormatter_Format(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	want := `time=2018-05-20 16:20:30.666, level=info, request_id=trace_id_1234567890, location=function(file:line), msg=message_1234567890, ` +
+	want := `time=2018-05-20 16:20:30.666, level=info, request_id=trace_id_123456789, location=function(file:line), msg=message_123456789, ` +
 		`fields.level=level, fields.location=location, fields.msg=msg, fields.request_id=request_id, fields.time=time, ` +
-		`key1=fields_value1, key2=fields_value2, key3=fields_value3` + "\n"
+		`key1=fields_value1, key2=fields_value2, key3=test_error_123456789` + "\n"
 	if string(have) != want {
 		t.Errorf("\nhave:%s\nwant:%s", have, want)
 		return

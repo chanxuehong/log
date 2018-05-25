@@ -30,7 +30,7 @@ func TestIsValidLevel(t *testing.T) {
 			true,
 		},
 		{
-			InvalidLevel,
+			invalidLevel,
 			false,
 		},
 		{
@@ -61,6 +61,7 @@ func TestIsLevelEnabled(t *testing.T) {
 		loggerLevel Level
 		want        bool
 	}{
+		// level is fatal
 		{
 			FatalLevel,
 			FatalLevel,
@@ -87,6 +88,7 @@ func TestIsLevelEnabled(t *testing.T) {
 			true,
 		},
 
+		// level is error
 		{
 			ErrorLevel,
 			FatalLevel,
@@ -113,6 +115,7 @@ func TestIsLevelEnabled(t *testing.T) {
 			true,
 		},
 
+		// level is warning
 		{
 			WarnLevel,
 			FatalLevel,
@@ -139,6 +142,7 @@ func TestIsLevelEnabled(t *testing.T) {
 			true,
 		},
 
+		// level is info
 		{
 			InfoLevel,
 			FatalLevel,
@@ -165,6 +169,7 @@ func TestIsLevelEnabled(t *testing.T) {
 			true,
 		},
 
+		// level is debug
 		{
 			DebugLevel,
 			FatalLevel,
@@ -207,38 +212,43 @@ func TestParseLevelString(t *testing.T) {
 		ok    bool
 	}{
 		{
-			FatalLevelString,
+			"fatal",
 			FatalLevel,
 			true,
 		},
 		{
-			ErrorLevelString,
+			"error",
 			ErrorLevel,
 			true,
 		},
 		{
-			WarnLevelString,
+			"warning",
 			WarnLevel,
 			true,
 		},
 		{
-			InfoLevelString,
+			"info",
 			InfoLevel,
 			true,
 		},
 		{
-			DebugLevelString,
+			"debug",
 			DebugLevel,
 			true,
 		},
 		{
 			"trace",
-			InvalidLevel,
+			invalidLevel,
+			false,
+		},
+		{
+			"panic",
+			invalidLevel,
 			false,
 		},
 		{
 			"",
-			InvalidLevel,
+			invalidLevel,
 			false,
 		},
 	}
@@ -258,23 +268,23 @@ func TestLevel_String(t *testing.T) {
 	}{
 		{
 			FatalLevel,
-			FatalLevelString,
+			"fatal",
 		},
 		{
 			ErrorLevel,
-			ErrorLevelString,
+			"error",
 		},
 		{
 			WarnLevel,
-			WarnLevelString,
+			"warning",
 		},
 		{
 			InfoLevel,
-			InfoLevelString,
+			"info",
 		},
 		{
 			DebugLevel,
-			DebugLevelString,
+			"debug",
 		},
 	}
 	for _, v := range tests {

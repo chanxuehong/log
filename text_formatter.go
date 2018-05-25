@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-var TextFormatter Formatter = &textFormatter{}
+var TextFormatter Formatter = textFormatter{}
 
 type textFormatter struct{}
 
-func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
+func (f textFormatter) Format(entry *Entry) ([]byte, error) {
 	var buffer *bytes.Buffer
 	if entry.Buffer != nil {
 		buffer = entry.Buffer
@@ -40,7 +40,7 @@ func (f *textFormatter) Format(entry *Entry) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (f *textFormatter) appendKeyValue(b *bytes.Buffer, key string, value interface{}) {
+func (f textFormatter) appendKeyValue(b *bytes.Buffer, key string, value interface{}) {
 	if b.Len() > 0 {
 		b.WriteString(", ")
 	}
@@ -49,7 +49,7 @@ func (f *textFormatter) appendKeyValue(b *bytes.Buffer, key string, value interf
 	f.appendValue(b, value)
 }
 
-func (f *textFormatter) appendValue(b *bytes.Buffer, value interface{}) {
+func (f textFormatter) appendValue(b *bytes.Buffer, value interface{}) {
 	stringVal, ok := value.(string)
 	if !ok {
 		stringVal = fmt.Sprint(value)

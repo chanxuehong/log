@@ -2,91 +2,13 @@ package log
 
 import (
 	"bytes"
-	"context"
-	"errors"
 	"fmt"
 	"io"
-	"net/http"
-	"path"
-	"runtime"
-	"strconv"
-	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
-
-	"github.com/chanxuehong/log/trace"
+	"unsafe"
 )
-
-type loggerContextKey struct{}
-
-func NewContext(ctx context.Context, logger Logger) context.Context {
-	if logger == nil {
-		return ctx
-	}
-	if ctx == nil {
-		return context.WithValue(context.Background(), loggerContextKey{}, logger)
-	}
-	if v, ok := ctx.Value(loggerContextKey{}).(Logger); ok && v == logger {
-		return ctx
-	}
-	return context.WithValue(ctx, loggerContextKey{}, logger)
-}
-
-func FromContext(ctx context.Context) (lg Logger, ok bool) {
-	if ctx == nil {
-		return nil, false
-	}
-	lg, ok = ctx.Value(loggerContextKey{}).(Logger)
-	if ok && lg != nil {
-		return lg, true
-	}
-	return nil, false
-}
-
-func MustFromContext(ctx context.Context) Logger {
-	lg, ok := FromContext(ctx)
-	if !ok {
-		panic("log: failed to get from context.Context")
-	}
-	return lg
-}
-
-func FromContextOrNew(ctx context.Context, new func() Logger) (lg Logger, isNew bool) {
-	lg, ok := FromContext(ctx)
-	if ok {
-		return lg, false
-	}
-	if new != nil {
-		return new(), true
-	}
-	return New(), true
-}
-
-func FromRequest(req *http.Request) (lg Logger, ok bool) {
-	if req == nil {
-		return nil, false
-	}
-	return FromContext(req.Context())
-}
-
-func MustFromRequest(req *http.Request) Logger {
-	lg, ok := FromRequest(req)
-	if !ok {
-		panic("log: failed to get from http.Request")
-	}
-	return lg
-}
-
-func FromRequestOrNew(req *http.Request, new func() Logger) (lg Logger, isNew bool) {
-	lg, ok := FromRequest(req)
-	if ok {
-		return lg, false
-	}
-	if new != nil {
-		return new(), true
-	}
-	return New(), true
-}
 
 type Logger interface {
 	// Fatal logs a message at FatalLevel.
@@ -131,118 +53,20 @@ type Logger interface {
 	WithFields(fields ...interface{}) Logger
 
 	// SetFormatter sets the logger formatter.
-	SetFormatter(formatter Formatter)
+	SetFormatter(Formatter)
 
 	// SetOutput sets the logger output.
-	SetOutput(output io.Writer)
+	SetOutput(io.Writer)
 
 	// SetLevel sets the logger level.
-	SetLevel(level Level) error
+	SetLevel(Level) error
 
 	// SetLevelString sets the logger level.
-	SetLevelString(str string) error
-}
-
-type Option func(*options)
-
-func WithTraceId(traceId string) Option {
-	return func(o *options) {
-		o.traceId = traceId
-	}
-}
-
-func WithTraceIdFunc(fn func() string) Option {
-	return func(o *options) {
-		if fn == nil {
-			return
-		}
-		o.traceId = fn()
-	}
-}
-
-// WithOutput sets the logger output.
-//  NOTE: output must be thread-safe, see ConcurrentWriter.
-func WithOutput(output io.Writer) Option {
-	return func(o *options) {
-		if output == nil {
-			return
-		}
-		o.output = output
-	}
-}
-
-func WithFormatter(formatter Formatter) Option {
-	return func(o *options) {
-		if formatter == nil {
-			return
-		}
-		o.formatter = formatter
-	}
-}
-
-func WithLevel(level Level) Option {
-	return func(o *options) {
-		if !isValidLevel(level) {
-			return
-		}
-		o.level = level
-	}
-}
-
-func WithLevelString(str string) Option {
-	return func(o *options) {
-		level, ok := parseLevelString(str)
-		if !ok {
-			return
-		}
-		o.level = level
-	}
-}
-
-func New(opts ...Option) Logger { return _New(opts) }
-
-func _New(opts []Option) *logger {
-	l := &logger{}
-	for _, opt := range getDefaultOptions() {
-		if opt == nil {
-			continue
-		}
-		opt(&l.options)
-	}
-	for _, opt := range opts {
-		if opt == nil {
-			continue
-		}
-		opt(&l.options)
-	}
-	if l.options.formatter == nil {
-		l.options.formatter = TextFormatter
-	}
-	if l.options.output == nil {
-		l.options.output = _concurrentStdout
-	}
-	if l.options.level == InvalidLevel {
-		l.options.level = DebugLevel
-	}
-	return l
-}
-
-type logger struct {
-	mu      sync.RWMutex // protects the following options field
-	options options
-
-	fields map[string]interface{}
-}
-
-type options struct {
-	traceId   string
-	formatter Formatter
-	output    io.Writer
-	level     Level
+	SetLevelString(string) error
 }
 
 type Formatter interface {
-	Format(entry *Entry) ([]byte, error)
+	Format(*Entry) ([]byte, error)
 }
 
 type Entry struct {
@@ -255,21 +79,49 @@ type Entry struct {
 	Buffer   *bytes.Buffer
 }
 
+func New(opts ...Option) Logger { return _New(opts) }
+
+func _New(opts []Option) *logger {
+	l := &logger{}
+	l.setOptions(newOptions(opts))
+	return l
+}
+
+type logger struct {
+	mu      sync.Mutex     // protects the following options field
+	options unsafe.Pointer // *options
+
+	fields map[string]interface{}
+}
+
+func (l *logger) getOptions() (opts *options) {
+	return (*options)(atomic.LoadPointer(&l.options))
+}
+func (l *logger) setOptions(opts *options) {
+	atomic.StorePointer(&l.options, unsafe.Pointer(opts))
+}
+
 func (l *logger) SetFormatter(formatter Formatter) {
 	if formatter == nil {
 		return
 	}
 	l.mu.Lock()
-	l.options.formatter = formatter
-	l.mu.Unlock()
+	defer l.mu.Unlock()
+
+	opts := *l.getOptions()
+	opts.SetFormatter(formatter)
+	l.setOptions(&opts)
 }
 func (l *logger) SetOutput(output io.Writer) {
 	if output == nil {
 		return
 	}
 	l.mu.Lock()
-	l.options.output = output
-	l.mu.Unlock()
+	defer l.mu.Unlock()
+
+	opts := *l.getOptions()
+	opts.SetOutput(output)
+	l.setOptions(&opts)
 }
 func (l *logger) SetLevel(level Level) error {
 	if !isValidLevel(level) {
@@ -288,14 +140,11 @@ func (l *logger) SetLevelString(str string) error {
 }
 func (l *logger) setLevel(level Level) {
 	l.mu.Lock()
-	l.options.level = level
-	l.mu.Unlock()
-}
-func (l *logger) getOptions() (opts options) {
-	l.mu.RLock()
-	opts = l.options
-	l.mu.RUnlock()
-	return
+	defer l.mu.Unlock()
+
+	opts := *l.getOptions()
+	opts.SetLevel(level)
+	l.setOptions(&opts)
 }
 
 func (l *logger) Fatal(msg string, fields ...interface{}) {
@@ -329,21 +178,11 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 	if !isLevelEnabled(level, opts.level) {
 		return
 	}
-
-	var location string
-	if pc, file, line, ok := runtime.Caller(calldepth + 1); ok {
-		if fn := runtime.FuncForPC(pc); fn != nil {
-			location = trimFuncName(fn.Name()) + "(" + trimFileName(file) + ":" + strconv.Itoa(line) + ")"
-		} else {
-			location = trimFileName(file) + ":" + strconv.Itoa(line)
-		}
-	} else {
-		location = "???"
-	}
+	location := callerLocation(calldepth + 1)
 
 	combinedFields, err := combineFields(l.fields, fields)
 	if err != nil {
-		fmt.Fprintf(_concurrentStderr, "log: failed to combine fields, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(ConcurrentStderr, "log: failed to combine fields, error=%v, location=%s\n", err, location)
 	}
 
 	pool := getBytesBufferPool()
@@ -361,30 +200,13 @@ func (l *logger) output(calldepth int, level Level, msg string, fields []interfa
 		Buffer:   buffer,
 	})
 	if err != nil {
-		fmt.Fprintf(_concurrentStderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(ConcurrentStderr, "log: failed to format Entry, error=%v, location=%s\n", err, location)
 		return
 	}
 	if _, err = opts.output.Write(data); err != nil {
-		fmt.Fprintf(_concurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(ConcurrentStderr, "log: failed to write to log, error=%v, location=%s\n", err, location)
 		return
 	}
-}
-
-func trimFuncName(name string) string {
-	return path.Base(name)
-}
-
-func trimFileName(name string) string {
-	i := strings.Index(name, "/src/") + len("/src/")
-	if i < len("/src/") || i >= len(name) /* BCE */ {
-		return name
-	}
-	name = name[i:]
-	i = strings.LastIndex(name, "/vendor/") + len("/vendor/")
-	if i < len("/vendor/") || i >= len(name) /* BCE */ {
-		return name
-	}
-	return name[i:]
 }
 
 func (l *logger) WithField(key string, value interface{}) Logger {
@@ -392,20 +214,22 @@ func (l *logger) WithField(key string, value interface{}) Logger {
 		return l
 	}
 	if len(l.fields) == 0 {
-		return &logger{
-			options: l.getOptions(),
-			fields:  map[string]interface{}{key: value},
+		nl := &logger{
+			fields: map[string]interface{}{key: value},
 		}
+		nl.setOptions(l.getOptions())
+		return nl
 	}
 	m := make(map[string]interface{}, len(l.fields)+1)
 	for k, v := range l.fields {
 		m[k] = v
 	}
 	m[key] = value
-	return &logger{
-		options: l.getOptions(),
-		fields:  m,
+	nl := &logger{
+		fields: m,
 	}
+	nl.setOptions(l.getOptions())
+	return nl
 }
 
 func (l *logger) WithFields(fields ...interface{}) Logger {
@@ -414,75 +238,11 @@ func (l *logger) WithFields(fields ...interface{}) Logger {
 	}
 	m, err := combineFields(l.fields, fields)
 	if err != nil {
-		var location string
-		if pc, file, line, ok := runtime.Caller(1); ok {
-			if fn := runtime.FuncForPC(pc); fn != nil {
-				location = trimFuncName(fn.Name()) + "(" + trimFileName(file) + ":" + strconv.Itoa(line) + ")"
-			} else {
-				location = trimFileName(file) + ":" + strconv.Itoa(line)
-			}
-		} else {
-			location = "???"
-		}
-		fmt.Fprintf(_concurrentStderr, "log: failed to combine fields, error=%v, location=%s\n", err, location)
+		fmt.Fprintf(ConcurrentStderr, "log: failed to combine fields, error=%v, location=%s\n", err, callerLocation(1))
 	}
-	return &logger{
-		options: l.getOptions(),
-		fields:  m,
+	nl := &logger{
+		fields: m,
 	}
-}
-
-var (
-	_ErrNumberOfFieldsMustNotBeOdd error = errors.New("the number of fields must not be odd")
-	_ErrTypeOfFieldKeyMustBeString error = errors.New("the type of field key must be string")
-	_ErrFieldKeyMustNotBeEmpty     error = errors.New("the field key must not be empty")
-)
-
-func combineFields(m map[string]interface{}, fields []interface{}) (map[string]interface{}, error) {
-	if len(fields) == 0 {
-		return cloneFields(m), nil
-	}
-	if len(fields)&1 != 0 {
-		return cloneFields(m), _ErrNumberOfFieldsMustNotBeOdd
-	}
-
-	m2 := make(map[string]interface{}, 8+len(m)+len(fields)>>1) // 8 is reserved for the standard field
-	for k, v := range m {
-		m2[k] = v
-	}
-	var (
-		k  string
-		ok bool
-	)
-	for i, v := range fields {
-		if i&1 == 0 { // key
-			k, ok = v.(string)
-			if !ok {
-				return m2, _ErrTypeOfFieldKeyMustBeString
-			}
-			if k == "" {
-				return m2, _ErrFieldKeyMustNotBeEmpty
-			}
-		} else { // value
-			m2[k] = v
-		}
-	}
-	return m2, nil
-}
-
-func cloneFields(fields map[string]interface{}) map[string]interface{} {
-	if len(fields) == 0 {
-		return nil
-	}
-	m := make(map[string]interface{}, len(fields))
-	for k, v := range fields {
-		m[k] = v
-	}
-	return m
-}
-
-var _ trace.Tracer = (*logger)(nil)
-
-func (l *logger) TraceId() string {
-	return l.getOptions().traceId
+	nl.setOptions(l.getOptions())
+	return nl
 }

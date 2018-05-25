@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 )
 
-var JsonFormatter Formatter = &jsonFormatter{}
+var JsonFormatter Formatter = jsonFormatter{}
 
 type jsonFormatter struct{}
 
-func (f *jsonFormatter) Format(entry *Entry) ([]byte, error) {
+func (jsonFormatter) Format(entry *Entry) ([]byte, error) {
 	var buffer *bytes.Buffer
 	if entry.Buffer != nil {
 		buffer = entry.Buffer

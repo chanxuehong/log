@@ -8,41 +8,21 @@ import (
 
 func TestFormatTime(t *testing.T) {
 	now := time.Now()
-	have := FormatTimeString(now)
+	have := FormatTime(now)
 	want := now.Format(TimeFormatLayout)
-	if have != want {
+	if have := string(have[:]); have != want {
 		t.Errorf("have:%s, want:%s", have, want)
 		return
 	}
 }
 
-func BenchmarkFormatTime(b *testing.B) {
+func TestFormatTimeString(t *testing.T) {
 	now := time.Now()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		FormatTime(now)
-	}
-}
-
-func BenchmarkFormatTimeString(b *testing.B) {
-	now := time.Now()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		FormatTimeString(now)
-	}
-}
-
-func BenchmarkStdTimeFormat(b *testing.B) {
-	now := time.Now()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		now.Format(TimeFormatLayout)
+	have := FormatTimeString(now)
+	want := now.Format(TimeFormatLayout)
+	if have != want {
+		t.Errorf("have:%s, want:%s", have, want)
+		return
 	}
 }
 

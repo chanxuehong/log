@@ -12,7 +12,7 @@ type BytesBufferPool interface {
 	Put(*bytes.Buffer)
 }
 
-var _BytesBufferPoolPtr unsafe.Pointer = unsafe.Pointer(&_defaultBytesBufferPool)
+var _BytesBufferPoolPtr unsafe.Pointer = unsafe.Pointer(&_defaultBytesBufferPool) // *BytesBufferPool
 
 func getBytesBufferPool() BytesBufferPool {
 	ptr := (*BytesBufferPool)(atomic.LoadPointer(&_BytesBufferPoolPtr))
@@ -26,7 +26,7 @@ func SetBytesBufferPool(pool BytesBufferPool) {
 	atomic.StorePointer(&_BytesBufferPoolPtr, unsafe.Pointer(&pool))
 }
 
-var _defaultBytesBufferPool BytesBufferPool = &_BytesBufferPool{
+var _defaultBytesBufferPool BytesBufferPool = &bytesBufferPool{
 	pool: sync.Pool{
 		New: syncPoolNew,
 	},
@@ -36,15 +36,15 @@ func syncPoolNew() interface{} {
 	return bytes.NewBuffer(make([]byte, 0, 16<<10))
 }
 
-type _BytesBufferPool struct {
+type bytesBufferPool struct {
 	pool sync.Pool
 }
 
-func (p *_BytesBufferPool) Get() *bytes.Buffer {
+func (p *bytesBufferPool) Get() *bytes.Buffer {
 	return p.pool.Get().(*bytes.Buffer)
 }
 
-func (p *_BytesBufferPool) Put(x *bytes.Buffer) {
+func (p *bytesBufferPool) Put(x *bytes.Buffer) {
 	if x == nil {
 		return
 	}

@@ -5,8 +5,15 @@ import (
 	"strings"
 )
 
+func init() {
+	// since invalidLevel must be 0, forced check.
+	if invalidLevel != 0 {
+		panic("invalidLevel must equal 0")
+	}
+}
+
 const (
-	InvalidLevel Level = iota // InvalidLevel must equal 0
+	invalidLevel Level = iota
 	FatalLevel
 	ErrorLevel
 	WarnLevel
@@ -42,7 +49,7 @@ func parseLevelString(str string) (level Level, ok bool) {
 	case FatalLevelString:
 		return FatalLevel, true
 	default:
-		return InvalidLevel, false
+		return invalidLevel, false
 	}
 }
 
