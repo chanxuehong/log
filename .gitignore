@@ -1,0 +1,6 @@
+# goland or idea project configuration
+/.idea
+.DS_Store
+
+# vim temp file
+*.swp

@@ -144,16 +144,16 @@ func TestFromContext(t *testing.T) {
 }
 
 func TestFromRequest(t *testing.T) {
-	// nil *http.Request
-	{
-		var req *http.Request
-		id, ok := FromRequest(req)
-		wantId, wantOk := "", false
-		if id != wantId || ok != wantOk {
-			t.Errorf("have:(%s, %t), want:(%s, %t)", id, ok, wantId, wantOk)
-			return
-		}
-	}
+	//// nil *http.Request
+	//{
+	//	var req *http.Request
+	//	id, ok := FromRequest(req)
+	//	wantId, wantOk := "", false
+	//	if id != wantId || ok != wantOk {
+	//		t.Errorf("have:(%s, %t), want:(%s, %t)", id, ok, wantId, wantOk)
+	//		return
+	//	}
+	//}
 
 	// non-nil *http.Request
 

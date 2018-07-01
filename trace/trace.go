@@ -35,9 +35,6 @@ func FromContext(ctx context.Context) (traceId string, ok bool) {
 }
 
 func FromRequest(req *http.Request) (traceId string, ok bool) {
-	if req == nil {
-		return "", false
-	}
 	traceId, ok = FromContext(req.Context())
 	if ok {
 		return traceId, true

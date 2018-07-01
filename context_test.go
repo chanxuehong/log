@@ -237,13 +237,26 @@ func TestFromContextOrNew(t *testing.T) {
 		{
 			var ctx context.Context
 
-			lg, ok := FromContextOrNew(ctx, nil)
+			lg, ctx2, ok := FromContextOrNew(ctx, nil)
 			if lg == nil {
 				t.Error("want non-nil")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if ctx2 == ctx {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromContext(ctx2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -252,13 +265,26 @@ func TestFromContextOrNew(t *testing.T) {
 		{
 			ctx := context.Background()
 
-			lg, ok := FromContextOrNew(ctx, nil)
+			lg, ctx2, ok := FromContextOrNew(ctx, nil)
 			if lg == nil {
 				t.Error("want non-nil")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if ctx2 == ctx {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromContext(ctx2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -271,13 +297,26 @@ func TestFromContextOrNew(t *testing.T) {
 			_lg := New()
 			ctx := context.WithValue(context.Background(), _loggerContextKey, _lg)
 
-			lg, ok := FromContextOrNew(ctx, nil)
+			lg, ctx2, ok := FromContextOrNew(ctx, nil)
 			if lg != _lg {
 				t.Error("want equal")
 				return
 			}
 			if ok {
 				t.Error("want false")
+				return
+			}
+			if ctx2 != ctx {
+				t.Error("want equal")
+				return
+			}
+			lg2, ok := FromContext(ctx2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -292,13 +331,26 @@ func TestFromContextOrNew(t *testing.T) {
 		{
 			var ctx context.Context
 
-			lg, ok := FromContextOrNew(ctx, _new)
+			lg, ctx2, ok := FromContextOrNew(ctx, _new)
 			if lg != _newLogger {
 				t.Error("want equal")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if ctx2 == ctx {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromContext(ctx2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -307,13 +359,26 @@ func TestFromContextOrNew(t *testing.T) {
 		{
 			ctx := context.Background()
 
-			lg, ok := FromContextOrNew(ctx, _new)
+			lg, ctx2, ok := FromContextOrNew(ctx, _new)
 			if lg != _newLogger {
 				t.Error("want equal")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if ctx2 == ctx {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromContext(ctx2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -326,7 +391,7 @@ func TestFromContextOrNew(t *testing.T) {
 			_lg := New()
 			ctx := context.WithValue(context.Background(), _loggerContextKey, _lg)
 
-			lg, ok := FromContextOrNew(ctx, _new)
+			lg, ctx2, ok := FromContextOrNew(ctx, _new)
 			if lg != _lg {
 				t.Error("want equal")
 				return
@@ -335,14 +400,28 @@ func TestFromContextOrNew(t *testing.T) {
 				t.Error("want false")
 				return
 			}
+			if ctx2 != ctx {
+				t.Error("want equal")
+				return
+			}
+			lg2, ok := FromContext(ctx2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
+				return
+			}
 		}
 	}
 }
 
-func TestFromRequest(t *testing.T) {
-	// nil Request
+func Test_NewRequest_FromRequest(t *testing.T) {
+	// no called NewContext yet
 	{
-		var req *http.Request
+		req := &http.Request{}
+		req = req.WithContext(context.Background())
 
 		lg, ok := FromRequest(req)
 		want, wantOk := Logger(nil), false
@@ -351,6 +430,127 @@ func TestFromRequest(t *testing.T) {
 			return
 		}
 	}
+
+	// called NewContext with nil Logger
+	{
+		req := &http.Request{}
+		req = req.WithContext(context.Background())
+
+		_lg := Logger(nil)
+		req = NewRequest(req, _lg)
+
+		lg, ok := FromRequest(req)
+		want, wantOk := Logger(nil), false
+		if lg != want || ok != wantOk {
+			t.Errorf("have:(%#v, %t), want:(%#v, %t)", lg, ok, want, wantOk)
+			return
+		}
+	}
+
+	// called NewContext with non-nil Logger, nil context.Context
+	{
+		req := &http.Request{}
+
+		_lg := New()
+		req = NewRequest(req, _lg)
+
+		lg, ok := FromRequest(req)
+		want, wantOk := _lg, true
+		if lg != want || ok != wantOk {
+			t.Errorf("have:(%#v, %t), want:(%#v, %t)", lg, ok, want, wantOk)
+			return
+		}
+	}
+
+	// called NewContext with non-nil Logger, non-nil context.Context
+	{
+		req := &http.Request{}
+		req = req.WithContext(context.Background())
+
+		_lg := New()
+		req = NewRequest(req, _lg)
+
+		lg, ok := FromRequest(req)
+		want, wantOk := _lg, true
+		if lg != want || ok != wantOk {
+			t.Errorf("have:(%#v, %t), want:(%#v, %t)", lg, ok, want, wantOk)
+			return
+		}
+	}
+}
+
+func TestNewRequest(t *testing.T) {
+	// nil Logger
+	{
+		req := &http.Request{}
+
+		req2 := NewRequest(req, Logger(nil))
+		if req != req2 {
+			t.Error("want equal")
+			return
+		}
+	}
+
+	// nil context.Context
+	{
+		req := &http.Request{}
+
+		_lg := New()
+		req2 := NewRequest(req, _lg)
+		if req == req2 {
+			t.Error("want not equal")
+			return
+		}
+
+		lg, ok := FromRequest(req2)
+		want, wantOk := _lg, true
+		if lg != want || ok != wantOk {
+			t.Errorf("have:(%#v, %t), want:(%#v, %t)", lg, ok, want, wantOk)
+			return
+		}
+	}
+
+	// serially NewContext with same Logger
+	{
+		req := &http.Request{}
+		req = req.WithContext(context.Background())
+
+		_lg := New()
+		req2 := NewRequest(req, _lg)
+		req3 := NewRequest(req2, _lg)
+		if req2 != req3 {
+			t.Error("want equal")
+			return
+		}
+	}
+
+	// parallel NewContext with same Logger
+	{
+		req := &http.Request{}
+		req = req.WithContext(context.Background())
+
+		_lg := New()
+		req2 := NewRequest(req, _lg)
+		req3 := NewRequest(req, _lg)
+		if req2 == req3 {
+			t.Error("want not equal")
+			return
+		}
+	}
+}
+
+func TestFromRequest(t *testing.T) {
+	//// nil Request
+	//{
+	//	var req *http.Request
+	//
+	//	lg, ok := FromRequest(req)
+	//	want, wantOk := Logger(nil), false
+	//	if lg != want || ok != wantOk {
+	//		t.Errorf("have:(%#v, %t), want:(%#v, %t)", lg, ok, want, wantOk)
+	//		return
+	//	}
+	//}
 
 	// nil context
 	{
@@ -400,24 +600,24 @@ func TestFromRequest(t *testing.T) {
 }
 
 func TestMustFromRequest(t *testing.T) {
-	// nil Request
-	func() {
-		var lg Logger
-
-		defer func() {
-			if err := recover(); err != nil {
-				if lg != nil {
-					t.Error("lg must nil")
-				}
-			} else {
-				t.Error("must panic")
-			}
-		}()
-
-		var req *http.Request
-
-		lg = MustFromRequest(req)
-	}()
+	//// nil Request
+	//func() {
+	//	var lg Logger
+	//
+	//	defer func() {
+	//		if err := recover(); err != nil {
+	//			if lg != nil {
+	//				t.Error("lg must nil")
+	//			}
+	//		} else {
+	//			t.Error("must panic")
+	//		}
+	//	}()
+	//
+	//	var req *http.Request
+	//
+	//	lg = MustFromRequest(req)
+	//}()
 
 	// nil context
 	func() {
@@ -494,32 +694,58 @@ func TestMustFromRequest(t *testing.T) {
 func TestFromRequestOrNew(t *testing.T) {
 	// nil new function
 	{
-		// nil Request
-		{
-			var req *http.Request
-
-			lg, ok := FromRequestOrNew(req, nil)
-			if lg == nil {
-				t.Error("want non-nil")
-				return
-			}
-			if !ok {
-				t.Error("want true")
-				return
-			}
-		}
+		//// nil Request
+		//{
+		//	var req *http.Request
+		//
+		//	lg, req2, ok := FromRequestOrNew(req, nil)
+		//	if lg == nil {
+		//		t.Error("want non-nil")
+		//		return
+		//	}
+		//	if !ok {
+		//		t.Error("want true")
+		//		return
+		//	}
+		//	if req2 == req {
+		//		t.Error("want not equal")
+		//		return
+		//	}
+		//	lg2, ok := FromRequest(req2)
+		//	if !ok {
+		//		t.Error("want true")
+		//		return
+		//	}
+		//	if lg2 != lg {
+		//		t.Error("want equal")
+		//		return
+		//	}
+		//}
 
 		// nil context
 		{
 			req := &http.Request{}
 
-			lg, ok := FromRequestOrNew(req, nil)
+			lg, req2, ok := FromRequestOrNew(req, nil)
 			if lg == nil {
 				t.Error("want non-nil")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if req2 == req {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromRequest(req2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -531,13 +757,26 @@ func TestFromRequestOrNew(t *testing.T) {
 			ctx := context.Background()
 			req = req.WithContext(ctx)
 
-			lg, ok := FromRequestOrNew(req, nil)
+			lg, req2, ok := FromRequestOrNew(req, nil)
 			if lg == nil {
 				t.Error("want non-nil")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if req2 == req {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromRequest(req2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -553,13 +792,26 @@ func TestFromRequestOrNew(t *testing.T) {
 			ctx := context.WithValue(context.Background(), _loggerContextKey, _lg)
 			req = req.WithContext(ctx)
 
-			lg, ok := FromRequestOrNew(req, nil)
+			lg, req2, ok := FromRequestOrNew(req, nil)
 			if lg != _lg {
 				t.Error("want equal")
 				return
 			}
 			if ok {
 				t.Error("want false")
+				return
+			}
+			if req2 != req {
+				t.Error("want equal")
+				return
+			}
+			lg2, ok := FromRequest(req2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -570,32 +822,58 @@ func TestFromRequestOrNew(t *testing.T) {
 		var _newLogger = New()
 		var _new = func() Logger { return _newLogger }
 
-		// nil Request
-		{
-			var req *http.Request
-
-			lg, ok := FromRequestOrNew(req, _new)
-			if lg != _newLogger {
-				t.Error("want equal")
-				return
-			}
-			if !ok {
-				t.Error("want true")
-				return
-			}
-		}
+		//// nil Request
+		//{
+		//	var req *http.Request
+		//
+		//	lg, req2, ok := FromRequestOrNew(req, _new)
+		//	if lg != _newLogger {
+		//		t.Error("want equal")
+		//		return
+		//	}
+		//	if !ok {
+		//		t.Error("want true")
+		//		return
+		//	}
+		//	if req2 == req {
+		//		t.Error("want not equal")
+		//		return
+		//	}
+		//	lg2, ok := FromRequest(req2)
+		//	if !ok {
+		//		t.Error("want true")
+		//		return
+		//	}
+		//	if lg2 != lg {
+		//		t.Error("want equal")
+		//		return
+		//	}
+		//}
 
 		// nil context
 		{
 			req := &http.Request{}
 
-			lg, ok := FromRequestOrNew(req, _new)
+			lg, req2, ok := FromRequestOrNew(req, _new)
 			if lg != _newLogger {
 				t.Error("want equal")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if req2 == req {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromRequest(req2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -607,13 +885,26 @@ func TestFromRequestOrNew(t *testing.T) {
 			ctx := context.Background()
 			req = req.WithContext(ctx)
 
-			lg, ok := FromRequestOrNew(req, _new)
+			lg, req2, ok := FromRequestOrNew(req, _new)
 			if lg != _newLogger {
 				t.Error("want equal")
 				return
 			}
 			if !ok {
 				t.Error("want true")
+				return
+			}
+			if req2 == req {
+				t.Error("want not equal")
+				return
+			}
+			lg2, ok := FromRequest(req2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}
@@ -629,13 +920,26 @@ func TestFromRequestOrNew(t *testing.T) {
 			ctx := context.WithValue(context.Background(), _loggerContextKey, _lg)
 			req = req.WithContext(ctx)
 
-			lg, ok := FromRequestOrNew(req, _new)
+			lg, req2, ok := FromRequestOrNew(req, _new)
 			if lg != _lg {
 				t.Error("want equal")
 				return
 			}
 			if ok {
 				t.Error("want false")
+				return
+			}
+			if req2 != req {
+				t.Error("want equal")
+				return
+			}
+			lg2, ok := FromRequest(req2)
+			if !ok {
+				t.Error("want true")
+				return
+			}
+			if lg2 != lg {
+				t.Error("want equal")
 				return
 			}
 		}

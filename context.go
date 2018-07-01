@@ -38,21 +38,36 @@ func MustFromContext(ctx context.Context) Logger {
 	return lg
 }
 
-func FromContextOrNew(ctx context.Context, new func() Logger) (lg Logger, isNew bool) {
+func FromContextOrNew(ctx context.Context, new func() Logger) (lg Logger, ctx2 context.Context, isNew bool) {
 	lg, ok := FromContext(ctx)
 	if ok {
-		return lg, false
+		return lg, ctx, false
 	}
 	if new != nil {
-		return new(), true
+		lg = new()
+		ctx2 = NewContext(ctx, lg)
+		isNew = true
+		return
 	}
-	return New(), true
+	lg = New()
+	ctx2 = NewContext(ctx, lg)
+	isNew = true
+	return
+}
+
+func NewRequest(req *http.Request, logger Logger) *http.Request {
+	if logger == nil {
+		return req
+	}
+	ctx := req.Context()
+	ctx2 := NewContext(ctx, logger)
+	if ctx2 == ctx {
+		return req
+	}
+	return req.WithContext(ctx2)
 }
 
 func FromRequest(req *http.Request) (lg Logger, ok bool) {
-	if req == nil {
-		return nil, false
-	}
 	return FromContext(req.Context())
 }
 
@@ -64,13 +79,19 @@ func MustFromRequest(req *http.Request) Logger {
 	return lg
 }
 
-func FromRequestOrNew(req *http.Request, new func() Logger) (lg Logger, isNew bool) {
+func FromRequestOrNew(req *http.Request, new func() Logger) (lg Logger, req2 *http.Request, isNew bool) {
 	lg, ok := FromRequest(req)
 	if ok {
-		return lg, false
+		return lg, req, false
 	}
 	if new != nil {
-		return new(), true
+		lg = new()
+		req2 = NewRequest(req, lg)
+		isNew = true
+		return
 	}
-	return New(), true
+	lg = New()
+	req2 = NewRequest(req, lg)
+	isNew = true
+	return
 }
