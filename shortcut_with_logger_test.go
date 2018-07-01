@@ -1,10 +1,10 @@
+// <-- to adjust the line number
 package log
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -32,9 +32,9 @@ func testOutputContextLocation() {
 var testWithLoggerContext = NewContext(context.Background(), New())
 
 func setWithLoggerContextOptionsToDefault() {
-	SetFormatterContext(testWithLoggerContext, TextFormatter)
-	SetOutputContext(testWithLoggerContext, ConcurrentStdout)
-	SetLevelContext(testWithLoggerContext, DebugLevel)
+	MustFromContext(testWithLoggerContext).SetFormatter(TextFormatter)
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentStdout)
+	MustFromContext(testWithLoggerContext).SetLevel(DebugLevel)
 }
 
 //type locationFormat struct{}
@@ -49,15 +49,15 @@ func TestLocationContext(t *testing.T) {
 	// fatal
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, locationFormat{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(locationFormat{})
 
 		testFatalContextLocation()
 
 		location := buf.String()
 		switch {
-		case location == "log.testFatalContextLocation(github.com/chanxuehong/log/shortcut_test.go:14)":
-		case strings.HasPrefix(location, "log.testFatalContextLocation(") && strings.HasSuffix(location, "/log/shortcut_test.go:14)"):
+		case location == "log.testFatalContextLocation(github.com/chanxuehong/log/shortcut_with_logger_test.go:14)":
+		case strings.HasPrefix(location, "log.testFatalContextLocation(") && strings.HasSuffix(location, "/log/shortcut_with_logger_test.go:14)"):
 		default:
 			t.Errorf("not expected location: %s", location)
 			return
@@ -67,15 +67,15 @@ func TestLocationContext(t *testing.T) {
 	// error
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, locationFormat{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(locationFormat{})
 
 		testErrorContextLocation()
 
 		location := buf.String()
 		switch {
-		case location == "log.testErrorContextLocation(github.com/chanxuehong/log/shortcut_test.go:17)":
-		case strings.HasPrefix(location, "log.testErrorContextLocation(") && strings.HasSuffix(location, "/log/shortcut_test.go:17)"):
+		case location == "log.testErrorContextLocation(github.com/chanxuehong/log/shortcut_with_logger_test.go:17)":
+		case strings.HasPrefix(location, "log.testErrorContextLocation(") && strings.HasSuffix(location, "/log/shortcut_with_logger_test.go:17)"):
 		default:
 			t.Errorf("not expected location: %s", location)
 			return
@@ -85,15 +85,15 @@ func TestLocationContext(t *testing.T) {
 	// warning
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, locationFormat{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(locationFormat{})
 
 		testWarnContextLocation()
 
 		location := buf.String()
 		switch {
-		case location == "log.testWarnContextLocation(github.com/chanxuehong/log/shortcut_test.go:20)":
-		case strings.HasPrefix(location, "log.testWarnContextLocation(") && strings.HasSuffix(location, "/log/shortcut_test.go:20)"):
+		case location == "log.testWarnContextLocation(github.com/chanxuehong/log/shortcut_with_logger_test.go:20)":
+		case strings.HasPrefix(location, "log.testWarnContextLocation(") && strings.HasSuffix(location, "/log/shortcut_with_logger_test.go:20)"):
 		default:
 			t.Errorf("not expected location: %s", location)
 			return
@@ -103,15 +103,15 @@ func TestLocationContext(t *testing.T) {
 	// info
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, locationFormat{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(locationFormat{})
 
 		testInfoContextLocation()
 
 		location := buf.String()
 		switch {
-		case location == "log.testInfoContextLocation(github.com/chanxuehong/log/shortcut_test.go:23)":
-		case strings.HasPrefix(location, "log.testInfoContextLocation(") && strings.HasSuffix(location, "/log/shortcut_test.go:23)"):
+		case location == "log.testInfoContextLocation(github.com/chanxuehong/log/shortcut_with_logger_test.go:23)":
+		case strings.HasPrefix(location, "log.testInfoContextLocation(") && strings.HasSuffix(location, "/log/shortcut_with_logger_test.go:23)"):
 		default:
 			t.Errorf("not expected location: %s", location)
 			return
@@ -121,15 +121,15 @@ func TestLocationContext(t *testing.T) {
 	// debug
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, locationFormat{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(locationFormat{})
 
 		testDebugContextLocation()
 
 		location := buf.String()
 		switch {
-		case location == "log.testDebugContextLocation(github.com/chanxuehong/log/shortcut_test.go:26)":
-		case strings.HasPrefix(location, "log.testDebugContextLocation(") && strings.HasSuffix(location, "/log/shortcut_test.go:26)"):
+		case location == "log.testDebugContextLocation(github.com/chanxuehong/log/shortcut_with_logger_test.go:26)":
+		case strings.HasPrefix(location, "log.testDebugContextLocation(") && strings.HasSuffix(location, "/log/shortcut_with_logger_test.go:26)"):
 		default:
 			t.Errorf("not expected location: %s", location)
 			return
@@ -139,15 +139,15 @@ func TestLocationContext(t *testing.T) {
 	// output
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, locationFormat{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(locationFormat{})
 
 		testOutputContextLocation()
 
 		location := buf.String()
 		switch {
-		case location == "log.testOutputContextLocation(github.com/chanxuehong/log/shortcut_test.go:29)":
-		case strings.HasPrefix(location, "log.testOutputContextLocation(") && strings.HasSuffix(location, "/log/shortcut_test.go:29)"):
+		case location == "log.testOutputContextLocation(github.com/chanxuehong/log/shortcut_with_logger_test.go:29)":
+		case strings.HasPrefix(location, "log.testOutputContextLocation(") && strings.HasSuffix(location, "/log/shortcut_with_logger_test.go:29)"):
 		default:
 			t.Errorf("not expected location: %s", location)
 			return
@@ -183,8 +183,8 @@ func TestFatalContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	FatalContext(testWithLoggerContext, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 	data := buf.Bytes()
@@ -211,8 +211,8 @@ func TestErrorContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	ErrorContext(testWithLoggerContext, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 	data := buf.Bytes()
@@ -239,8 +239,8 @@ func TestWarnContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	WarnContext(testWithLoggerContext, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 	data := buf.Bytes()
@@ -267,8 +267,8 @@ func TestInfoContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	InfoContext(testWithLoggerContext, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 	data := buf.Bytes()
@@ -295,8 +295,8 @@ func TestDebugContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	DebugContext(testWithLoggerContext, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 	data := buf.Bytes()
@@ -325,8 +325,8 @@ func TestOutputContext(t *testing.T) {
 	// fatal
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, FatalLevel, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -351,8 +351,8 @@ func TestOutputContext(t *testing.T) {
 	// error
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, ErrorLevel, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -377,8 +377,8 @@ func TestOutputContext(t *testing.T) {
 	// warning
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, WarnLevel, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -403,8 +403,8 @@ func TestOutputContext(t *testing.T) {
 	// info
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, InfoLevel, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -429,8 +429,8 @@ func TestOutputContext(t *testing.T) {
 	// debug
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, DebugLevel, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -455,8 +455,8 @@ func TestOutputContext(t *testing.T) {
 	// fatal - 1
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, FatalLevel-1, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -468,8 +468,8 @@ func TestOutputContext(t *testing.T) {
 	// debug + 1
 	{
 		var buf bytes.Buffer
-		SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-		SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+		MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+		MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 		OutputContext(testWithLoggerContext, 0, DebugLevel+1, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 		data := buf.Bytes()
@@ -484,8 +484,8 @@ func TestWithFieldContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	{
 		l := WithFieldContext(testWithLoggerContext, "field100-key", "field100-value")
@@ -541,8 +541,8 @@ func TestWithFieldsContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	var buf bytes.Buffer
-	SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-	SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+	MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+	MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 	{
 		l := WithFieldsContext(testWithLoggerContext, "field100-key", "field100-value", "field200-key", "field200-value")
@@ -595,285 +595,18 @@ func TestWithFieldsContext(t *testing.T) {
 	}
 }
 
-func TestSetFormatterContext(t *testing.T) {
-	defer setWithLoggerContextOptionsToDefault()
-
-	// default
-	{
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().formatter
-		want := TextFormatter
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	// nil Formatter
-	{
-		var formatter Formatter
-		SetFormatterContext(testWithLoggerContext, formatter)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().formatter
-		want := TextFormatter
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	// non-nil Formatter
-	{
-		var formatter = testJsonFormatter{}
-		SetFormatterContext(testWithLoggerContext, formatter)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().formatter
-		want := formatter
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-}
-
-func TestSetOutputContext(t *testing.T) {
-	defer setWithLoggerContextOptionsToDefault()
-
-	// default
-	{
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().output
-		want := ConcurrentStdout
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	// nil output
-	{
-		var output io.Writer
-		SetOutputContext(testWithLoggerContext, output)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().output
-		want := ConcurrentStdout
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	// non-nil output
-	{
-		var buf bytes.Buffer
-		var output io.Writer = ConcurrentWriter(&buf)
-		SetOutputContext(testWithLoggerContext, output)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().output
-		want := output
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-}
-
-func TestSetLevelContext(t *testing.T) {
-	defer setWithLoggerContextOptionsToDefault()
-
-	{
-		SetLevelContext(testWithLoggerContext, FatalLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := FatalLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, ErrorLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := ErrorLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, WarnLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := WarnLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, InfoLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, DebugLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := DebugLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, InfoLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, FatalLevel-1)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, DebugLevel+1)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelContext(testWithLoggerContext, InfoLevel)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-}
-
-func TestSetLevelStringContext(t *testing.T) {
-	defer setWithLoggerContextOptionsToDefault()
-
-	{
-		SetLevelStringContext(testWithLoggerContext, FatalLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := FatalLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, ErrorLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := ErrorLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, WarnLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := WarnLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, InfoLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, DebugLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := DebugLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, InfoLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, "panic")
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, "trace")
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-	{
-		SetLevelStringContext(testWithLoggerContext, InfoLevelString)
-
-		have := MustFromContext(testWithLoggerContext).(*logger).getOptions().level
-		want := InfoLevel
-		if have != want {
-			t.Errorf("have:%v, want:%v", have, want)
-			return
-		}
-	}
-}
-
 func TestLeveledOutputContext(t *testing.T) {
 	defer setWithLoggerContextOptionsToDefault()
 
 	// fatal
 	{
-		SetLevelContext(testWithLoggerContext, FatalLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(FatalLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, FatalLevel, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -898,8 +631,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, ErrorLevel, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -911,8 +644,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, WarnLevel, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -924,8 +657,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, InfoLevel, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -937,8 +670,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, DebugLevel, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -951,13 +684,13 @@ func TestLeveledOutputContext(t *testing.T) {
 
 	// error
 	{
-		SetLevelContext(testWithLoggerContext, ErrorLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(ErrorLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, FatalLevel, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -982,8 +715,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, ErrorLevel, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1008,8 +741,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, WarnLevel, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1021,8 +754,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, InfoLevel, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1034,8 +767,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, DebugLevel, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1048,13 +781,13 @@ func TestLeveledOutputContext(t *testing.T) {
 
 	// warning
 	{
-		SetLevelContext(testWithLoggerContext, WarnLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(WarnLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, FatalLevel, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1079,8 +812,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, ErrorLevel, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1105,8 +838,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, WarnLevel, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1131,8 +864,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, InfoLevel, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1144,8 +877,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, DebugLevel, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1158,13 +891,13 @@ func TestLeveledOutputContext(t *testing.T) {
 
 	// info
 	{
-		SetLevelContext(testWithLoggerContext, InfoLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(InfoLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, FatalLevel, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1189,8 +922,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, ErrorLevel, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1215,8 +948,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, WarnLevel, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1241,8 +974,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, InfoLevel, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1267,8 +1000,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, DebugLevel, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1281,13 +1014,13 @@ func TestLeveledOutputContext(t *testing.T) {
 
 	// debug
 	{
-		SetLevelContext(testWithLoggerContext, DebugLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(DebugLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, FatalLevel, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1312,8 +1045,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, ErrorLevel, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1338,8 +1071,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, WarnLevel, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1364,8 +1097,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, InfoLevel, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1390,8 +1123,8 @@ func TestLeveledOutputContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			OutputContext(testWithLoggerContext, 0, DebugLevel, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1421,13 +1154,13 @@ func TestLeveledPrintContext(t *testing.T) {
 
 	// fatal
 	{
-		SetLevelContext(testWithLoggerContext, FatalLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(FatalLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			FatalContext(testWithLoggerContext, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1452,8 +1185,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			ErrorContext(testWithLoggerContext, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1465,8 +1198,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			WarnContext(testWithLoggerContext, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1478,8 +1211,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			InfoContext(testWithLoggerContext, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1491,8 +1224,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			DebugContext(testWithLoggerContext, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1505,13 +1238,13 @@ func TestLeveledPrintContext(t *testing.T) {
 
 	// error
 	{
-		SetLevelContext(testWithLoggerContext, ErrorLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(ErrorLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			FatalContext(testWithLoggerContext, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1536,8 +1269,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			ErrorContext(testWithLoggerContext, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1562,8 +1295,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			WarnContext(testWithLoggerContext, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1575,8 +1308,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			InfoContext(testWithLoggerContext, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1588,8 +1321,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			DebugContext(testWithLoggerContext, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1602,13 +1335,13 @@ func TestLeveledPrintContext(t *testing.T) {
 
 	// warning
 	{
-		SetLevelContext(testWithLoggerContext, WarnLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(WarnLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			FatalContext(testWithLoggerContext, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1633,8 +1366,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			ErrorContext(testWithLoggerContext, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1659,8 +1392,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			WarnContext(testWithLoggerContext, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1685,8 +1418,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			InfoContext(testWithLoggerContext, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1698,8 +1431,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			DebugContext(testWithLoggerContext, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1712,13 +1445,13 @@ func TestLeveledPrintContext(t *testing.T) {
 
 	// info
 	{
-		SetLevelContext(testWithLoggerContext, InfoLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(InfoLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			FatalContext(testWithLoggerContext, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1743,8 +1476,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			ErrorContext(testWithLoggerContext, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1769,8 +1502,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			WarnContext(testWithLoggerContext, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1795,8 +1528,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			InfoContext(testWithLoggerContext, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1821,8 +1554,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			DebugContext(testWithLoggerContext, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1835,13 +1568,13 @@ func TestLeveledPrintContext(t *testing.T) {
 
 	// debug
 	{
-		SetLevelContext(testWithLoggerContext, DebugLevel)
+		MustFromContext(testWithLoggerContext).SetLevel(DebugLevel)
 
 		// fatal
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			FatalContext(testWithLoggerContext, "fatal-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1866,8 +1599,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// error
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			ErrorContext(testWithLoggerContext, "error-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1892,8 +1625,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// warning
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			WarnContext(testWithLoggerContext, "warning-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1918,8 +1651,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// info
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			InfoContext(testWithLoggerContext, "info-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
@@ -1944,8 +1677,8 @@ func TestLeveledPrintContext(t *testing.T) {
 		// debug
 		{
 			var buf bytes.Buffer
-			SetOutputContext(testWithLoggerContext, ConcurrentWriter(&buf))
-			SetFormatterContext(testWithLoggerContext, testJsonFormatter{})
+			MustFromContext(testWithLoggerContext).SetOutput(ConcurrentWriter(&buf))
+			MustFromContext(testWithLoggerContext).SetFormatter(testJsonFormatter{})
 
 			DebugContext(testWithLoggerContext, "debug-msg", "field1-key", "field1-value", "field2-key", "field2-value")
 			data := buf.Bytes()
