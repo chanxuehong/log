@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -50,8 +51,13 @@ func (f textFormatter) appendKeyValue(b *bytes.Buffer, key string, value interfa
 }
 
 func (f textFormatter) appendValue(b *bytes.Buffer, value interface{}) {
-	stringVal, ok := value.(string)
-	if !ok {
+	var stringVal string
+	switch v := value.(type) {
+	case string:
+		stringVal = v
+	case json.RawMessage:
+		stringVal = string(v)
+	default:
 		stringVal = fmt.Sprint(value)
 	}
 	b.WriteString(stringVal)

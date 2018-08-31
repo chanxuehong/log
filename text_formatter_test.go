@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 	"time"
@@ -17,6 +18,7 @@ func TestTextFormatter_Format(t *testing.T) {
 			"key1":           "fields_value1",
 			"key2":           "fields_value2",
 			"key3":           &testError{X: "123456789"}, // error
+			"key4":           json.RawMessage([]byte(`{"code":0,"msg":""}`)),
 			fieldKeyTime:     "time",
 			fieldKeyLevel:    "level",
 			fieldKeyTraceId:  "request_id",
@@ -32,7 +34,7 @@ func TestTextFormatter_Format(t *testing.T) {
 	}
 	want := `time=2018-05-20 16:20:30.666, level=info, request_id=trace_id_123456789, location=function(file:line), msg=message_123456789, ` +
 		`fields.level=level, fields.location=location, fields.msg=msg, fields.request_id=request_id, fields.time=time, ` +
-		`key1=fields_value1, key2=fields_value2, key3=test_error_123456789` + "\n"
+		`key1=fields_value1, key2=fields_value2, key3=test_error_123456789, key4={"code":0,"msg":""}` + "\n"
 	if string(have) != want {
 		t.Errorf("\nhave:%s\nwant:%s", have, want)
 		return
