@@ -1,5 +1,0 @@
-github.com/chanxuehong/internal v0.0.0-20180430074813-85d6017afbc4/go.mod h1:G4Uw1UFjRzDVuVpWwOJZoj0DeqP0GKZqU824CzRJM4I=
-github.com/chanxuehong/rand v0.0.0-20180830053958-4b3aff17f488/go.mod h1:h13adSJmQ5tsaV9bR72eTp7ePXJ2WIWyK6heLeietxA=
-github.com/chanxuehong/uuid v0.0.0-20180430073920-75ab5e2d8298/go.mod h1:itG2+8gQHEh38viH9DAHIpCPR52vb3g+tE+5rvD/LiI=
-github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=
-github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=

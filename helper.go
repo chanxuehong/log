@@ -3,9 +3,6 @@ package log
 import (
 	"encoding/json"
 	"encoding/xml"
-
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 )
 
 // JSON is a helper function, following is its function code.
@@ -18,15 +15,8 @@ func JSON(v interface{}) string {
 	defer pool.Put(buffer)
 	buffer.Reset()
 
-	if vv, ok := v.(proto.Message); ok {
-		m := jsonpb.Marshaler{OrigName: true}
-		if err := m.Marshal(buffer, vv); err != nil {
-			return ""
-		}
-	} else {
-		if err := json.NewEncoder(buffer).Encode(v); err != nil {
-			return ""
-		}
+	if err := json.NewEncoder(buffer).Encode(v); err != nil {
+		return ""
 	}
 	data := buffer.Bytes()
 
