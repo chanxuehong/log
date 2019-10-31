@@ -2,7 +2,7 @@ package log
 
 import "io"
 
-// NoopLogger 无操作的Logger
+// NoopLogger no operation Logger
 type NoopLogger struct{}
 
 // Fatal impl Logger Fatal
