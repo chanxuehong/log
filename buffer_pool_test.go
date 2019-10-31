@@ -2,10 +2,14 @@ package log
 
 import (
 	"bytes"
+	"runtime/debug"
 	"testing"
 )
 
 func TestDefaultBytesBufferPool(t *testing.T) {
+	debug.SetGCPercent(-1)
+	defer debug.SetGCPercent(100)
+
 	// new
 	func() {
 		pool := getBytesBufferPool()
