@@ -24,8 +24,8 @@ func trimFuncName(name string) string {
 }
 
 func trimFileName(name string) string {
-	i := strings.Index(name, "/src/") + len("/src/")
-	if i >= len("/src/") && i < len(name) /* BCE */ {
+	i := strings.Index(name, "/pkg/mod/") + len("/pkg/mod/")
+	if i >= len("/pkg/mod/") && i < len(name) /* BCE */ {
 		name = name[i:]
 	}
 	i = strings.LastIndex(name, "/vendor/") + len("/vendor/")

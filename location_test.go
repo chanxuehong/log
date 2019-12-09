@@ -30,11 +30,11 @@ func TestTrimFileName(t *testing.T) {
 			"/a/b/c.go",
 		},
 		{
-			"/a/src/b/c.go",
+			"/a/pkg/mod/b/c.go",
 			"b/c.go",
 		},
 		{
-			"/a/src/d/vendor/b/c.go",
+			"/a/pkg/mod/d/vendor/b/c.go",
 			"b/c.go",
 		},
 		{

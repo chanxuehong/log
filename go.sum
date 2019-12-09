@@ -1,0 +1,6 @@
+github.com/chanxuehong/internal v0.0.0-20180430074813-85d6017afbc4 h1:oIVeDc/vhuIVqHo13mjZXfHV4usEXez7ZvnDsNbv6wA=
+github.com/chanxuehong/internal v0.0.0-20180430074813-85d6017afbc4/go.mod h1:G4Uw1UFjRzDVuVpWwOJZoj0DeqP0GKZqU824CzRJM4I=
+github.com/chanxuehong/rand v0.0.0-20180830053958-4b3aff17f488 h1:6d1ijTov542DDRWsFdnPYeGWnlRxlzbpEaJuNJtBQiU=
+github.com/chanxuehong/rand v0.0.0-20180830053958-4b3aff17f488/go.mod h1:h13adSJmQ5tsaV9bR72eTp7ePXJ2WIWyK6heLeietxA=
+github.com/chanxuehong/uuid v0.0.0-20180430073920-75ab5e2d8298 h1:V3cpab0Brk1is2ZtzR+IcxJLtGNou13GcTy6iuxPxUc=
+github.com/chanxuehong/uuid v0.0.0-20180430073920-75ab5e2d8298/go.mod h1:itG2+8gQHEh38viH9DAHIpCPR52vb3g+tE+5rvD/LiI=
