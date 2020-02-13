@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
-	"time"
 )
 
 var TextFormatter Formatter = textFormatter{}
@@ -26,7 +24,8 @@ func (f textFormatter) Format(entry *Entry) ([]byte, error) {
 	f.appendKeyValue(buffer, fieldKeyLocation, entry.Location)
 	f.appendKeyValue(buffer, fieldKeyMessage, entry.Message)
 	if fields := entry.Fields; len(fields) > 0 {
-		prefixFieldClashes(fields)
+		fixFieldsConflictAndHandleErrorFields(fields)
+
 		keys := make([]string, 0, len(fields))
 		for k := range fields {
 			keys = append(keys, k)
@@ -61,41 +60,4 @@ func (f textFormatter) appendValue(b *bytes.Buffer, value interface{}) {
 		stringVal = fmt.Sprint(value)
 	}
 	b.WriteString(stringVal)
-}
-
-var _beijingLocation = time.FixedZone("Asia/Shanghai", 8*60*60)
-
-const (
-	fieldKeyTime     = "time"
-	fieldKeyLevel    = "level"
-	fieldKeyTraceId  = "request_id"
-	fieldKeyLocation = "location"
-	fieldKeyMessage  = "msg"
-)
-
-var stdFieldKeys = []string{
-	fieldKeyTime,
-	fieldKeyLevel,
-	fieldKeyTraceId,
-	fieldKeyLocation,
-	fieldKeyMessage,
-}
-
-func prefixFieldClashes(data map[string]interface{}) {
-	for _, stdFieldKey := range stdFieldKeys {
-		fieldValue, ok := data[stdFieldKey]
-		if !ok {
-			continue
-		}
-		delete(data, stdFieldKey)
-		newKey := "field." + stdFieldKey
-		for key, i := newKey, 2; ; i++ {
-			_, ok = data[key]
-			if !ok {
-				data[key] = fieldValue
-				break
-			}
-			key = newKey + "." + strconv.Itoa(i)
-		}
-	}
 }

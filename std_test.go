@@ -168,7 +168,7 @@ func (testJsonFormatter) Format(entry *Entry) ([]byte, error) {
 
 	// ignored entry.Time
 	m := make(map[string]interface{})
-	prefixFieldClashes(entry.Fields)
+	fixFieldsConflictAndHandleErrorFields(entry.Fields)
 	m[fieldKeyTraceId] = entry.TraceId
 	m[fieldKeyLevel] = entry.Level.String()
 	m[fieldKeyMessage] = entry.Message

@@ -18,12 +18,7 @@ func (jsonFormatter) Format(entry *Entry) ([]byte, error) {
 	}
 	var fields map[string]interface{}
 	if fields = entry.Fields; len(fields) > 0 {
-		prefixFieldClashes(fields)
-		for k, v := range fields {
-			if vv, ok := v.(error); ok {
-				fields[k] = vv.Error()
-			}
-		}
+		fixFieldsConflictAndHandleErrorFields(fields)
 	} else {
 		fields = make(map[string]interface{}, 8)
 	}

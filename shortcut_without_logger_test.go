@@ -169,7 +169,7 @@ func TestLocationContextWithoutLoggerWithoutLogger(t *testing.T) {
 //
 //	// ignored entry.Time
 //	m := make(map[string]interface{})
-//	prefixFieldClashes(entry.Fields)
+//	fixFieldsConflict(entry.Fields)
 //	m[fieldKeyTraceId] = entry.TraceId
 //	m[fieldKeyLevel] = entry.Level.String()
 //	m[fieldKeyMessage] = entry.Message
