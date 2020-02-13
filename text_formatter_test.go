@@ -33,7 +33,7 @@ func TestTextFormatter_Format(t *testing.T) {
 		return
 	}
 	want := `time=2018-05-20 16:20:30.666, level=info, request_id=trace_id_123456789, location=function(file:line), msg=message_123456789, ` +
-		`fields.level=level, fields.location=location, fields.msg=msg, fields.request_id=request_id, fields.time=time, ` +
+		`field.level=level, field.location=location, field.msg=msg, field.request_id=request_id, field.time=time, ` +
 		`key1=fields_value1, key2=fields_value2, key3=test_error_123456789, key4={"code":0,"msg":""}` + "\n"
 	if string(have) != want {
 		t.Errorf("\nhave:%s\nwant:%s", have, want)
@@ -43,19 +43,19 @@ func TestTextFormatter_Format(t *testing.T) {
 
 func TestPrefixFieldClashes(t *testing.T) {
 	m := map[string]interface{}{
-		"time":           "time",
-		"fields.time":    "fields.time",
-		"level":          "level",
-		"fields.level":   "fields.level",
-		"fields.level.2": "fields.level.2",
+		"time":          "time",
+		"field.time":    "field.time",
+		"level":         "level",
+		"field.level":   "field.level",
+		"field.level.2": "field.level.2",
 	}
 	prefixFieldClashes(m)
 	want := map[string]interface{}{
-		"fields.time.2":  "time",
-		"fields.time":    "fields.time",
-		"fields.level.3": "level",
-		"fields.level":   "fields.level",
-		"fields.level.2": "fields.level.2",
+		"field.time.2":  "time",
+		"field.time":    "field.time",
+		"field.level.3": "level",
+		"field.level":   "field.level",
+		"field.level.2": "field.level.2",
 	}
 	if !reflect.DeepEqual(m, want) {
 		t.Errorf("\nhave:%v\nwant:%v", m, want)

@@ -41,19 +41,19 @@ func TestJsonFormatter_Format(t *testing.T) {
 		return
 	}
 	want := map[string]string{
-		"time":              "2018-05-20 16:20:30.666",
-		"level":             "info",
-		"request_id":        "trace_id_123456789",
-		"location":          "function(file:line)",
-		"msg":               "message_123456789",
-		"fields.level":      "level",
-		"fields.location":   "location",
-		"fields.msg":        "msg",
-		"fields.request_id": "request_id",
-		"fields.time":       "time",
-		"key1":              "fields_value1",
-		"key2":              "fields_value2",
-		"key3":              "test_error_123456789", // error
+		"time":             "2018-05-20 16:20:30.666",
+		"level":            "info",
+		"request_id":       "trace_id_123456789",
+		"location":         "function(file:line)",
+		"msg":              "message_123456789",
+		"field.level":      "level",
+		"field.location":   "location",
+		"field.msg":        "msg",
+		"field.request_id": "request_id",
+		"field.time":       "time",
+		"key1":             "fields_value1",
+		"key2":             "fields_value2",
+		"key3":             "test_error_123456789", // error
 	}
 	if !reflect.DeepEqual(have, want) {
 		t.Errorf("\nhave:%v\nwant:%v", have, want)

@@ -88,7 +88,7 @@ func prefixFieldClashes(data map[string]interface{}) {
 			continue
 		}
 		delete(data, stdFieldKey)
-		newKey := "fields." + stdFieldKey
+		newKey := "field." + stdFieldKey
 		for key, i := newKey, 2; ; i++ {
 			_, ok = data[key]
 			if !ok {
