@@ -20,22 +20,15 @@ func combineFields(m map[string]interface{}, fields []interface{}) (map[string]i
 	for k, v := range m {
 		m2[k] = v
 	}
-	var (
-		k  string
-		ok bool
-	)
-	for i, v := range fields {
-		if i&1 == 0 { // key
-			k, ok = v.(string)
-			if !ok {
-				return m2, _ErrTypeOfFieldKeyMustBeString
-			}
-			if k == "" {
-				return m2, _ErrFieldKeyMustNotBeEmpty
-			}
-		} else { // value
-			m2[k] = v
+	for i := 0; i < len(fields); i += 2 {
+		k, ok := fields[i].(string)
+		if !ok {
+			return m2, _ErrTypeOfFieldKeyMustBeString
 		}
+		if k == "" {
+			return m2, _ErrFieldKeyMustNotBeEmpty
+		}
+		m2[k] = fields[i+1]
 	}
 	return m2, nil
 }
