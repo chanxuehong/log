@@ -18,7 +18,7 @@ func (f textFormatter) Format(entry *Entry) ([]byte, error) {
 	} else {
 		buffer = bytes.NewBuffer(make([]byte, 0, 16<<10))
 	}
-	f.appendKeyValue(buffer, fieldKeyTime, FormatTimeString(entry.Time.In(_beijingLocation)))
+	f.appendKeyValue(buffer, fieldKeyTime, FormatTime(entry.Time.In(_beijingLocation)))
 	f.appendKeyValue(buffer, fieldKeyLevel, entry.Level.String())
 	f.appendKeyValue(buffer, fieldKeyTraceId, entry.TraceId)
 	f.appendKeyValue(buffer, fieldKeyLocation, entry.Location)

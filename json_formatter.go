@@ -22,7 +22,7 @@ func (jsonFormatter) Format(entry *Entry) ([]byte, error) {
 	} else {
 		fields = make(map[string]interface{}, 8)
 	}
-	fields[fieldKeyTime] = FormatTimeString(entry.Time.In(_beijingLocation))
+	fields[fieldKeyTime] = FormatTime(entry.Time.In(_beijingLocation))
 	fields[fieldKeyLevel] = entry.Level.String()
 	fields[fieldKeyTraceId] = entry.TraceId
 	fields[fieldKeyLocation] = entry.Location

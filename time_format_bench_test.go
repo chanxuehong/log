@@ -7,30 +7,22 @@ import (
 
 func BenchmarkFormatTime(b *testing.B) {
 	now := time.Now()
-
+	var str string
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		FormatTime(now)
+		str = FormatTime(now)
 	}
-}
-
-func BenchmarkFormatTimeString(b *testing.B) {
-	now := time.Now()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		FormatTimeString(now)
-	}
+	_ = str
 }
 
 func BenchmarkStdTimeFormat(b *testing.B) {
 	now := time.Now()
-
+	var str string
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		now.Format(TimeFormatLayout)
+		str = now.Format(TimeFormatLayout)
 	}
+	_ = str
 }

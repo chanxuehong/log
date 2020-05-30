@@ -4,52 +4,38 @@ import "time"
 
 const TimeFormatLayout = "2006-01-02 15:04:05.000"
 
-// 2006-01-02 15:04:05.000
-func FormatTimeString(t time.Time) string {
-	result := FormatTime(t)
-	return string(result[:])
-}
+const (
+	digits01 = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+	digits10 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
+)
 
-// 2006-01-02 15:04:05.000
-func FormatTime(t time.Time) (result [23]byte) {
+// FormatTime format time.Time as layout "2006-01-02 15:04:05.000".
+func FormatTime(t time.Time) string {
 	year, month, day := t.Date()
+	if year < 1 || year > 9999 {
+		return t.Format(TimeFormatLayout)
+	}
 	hour, min, sec := t.Clock()
-	nsec := t.Nanosecond()
+	millisecond := t.Nanosecond() / 1e6
 
-	itoa(result[:4], year)
+	year100 := year / 100
+	year1 := year % 100
+	millisecond100 := millisecond / 100
+	millisecond1 := millisecond % 100
+
+	var result [23]byte
+	result[0], result[1], result[2], result[3] = digits10[year100], digits01[year100], digits10[year1], digits01[year1]
 	result[4] = '-'
-	itoa(result[5:7], int(month))
+	result[5], result[6] = digits10[month], digits01[month]
 	result[7] = '-'
-	itoa(result[8:10], day)
+	result[8], result[9] = digits10[day], digits01[day]
 	result[10] = ' '
-	itoa(result[11:13], hour)
+	result[11], result[12] = digits10[hour], digits01[hour]
 	result[13] = ':'
-	itoa(result[14:16], min)
+	result[14], result[15] = digits10[min], digits01[min]
 	result[16] = ':'
-	itoa(result[17:19], sec)
+	result[17], result[18] = digits10[sec], digits01[sec]
 	result[19] = '.'
-	itoa(result[20:], nsec/1e6)
-	return
-}
-
-// itoa format integer to fixed-width decimal ASCII.
-//
-// requirement:
-//  n must be greater than or equal to 0
-//  buf must be large enough to accommodate n
-func itoa(buf []byte, n int) {
-	i := len(buf) - 1
-	for n >= 10 {
-		q := n / 10
-		buf[i] = byte('0' + n - q*10)
-		i--
-		n = q
-	}
-	// n < 10
-	buf[i] = byte('0' + n)
-	i--
-	for i >= 0 {
-		buf[i] = '0'
-		i--
-	}
+	result[20], result[21], result[22] = digits01[millisecond100], digits10[millisecond1], digits01[millisecond1]
+	return string(result[:])
 }

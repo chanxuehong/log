@@ -1,6 +1,6 @@
 module github.com/chanxuehong/log
 
-go 1.13
+go 1.14
 
 require (
 	github.com/chanxuehong/internal v0.0.0-20180430074813-85d6017afbc4 // indirect
