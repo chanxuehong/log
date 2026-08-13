@@ -24,7 +24,8 @@ func WithTraceIdFunc(fn func() string) Option {
 }
 
 // WithOutput sets the logger output.
-//  NOTE: output must be thread-safe, see ConcurrentWriter.
+//
+//	NOTE: output must be thread-safe, see ConcurrentWriter.
 func WithOutput(output io.Writer) Option {
 	return func(o *options) {
 		if output == nil {

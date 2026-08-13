@@ -7,8 +7,8 @@ import (
 
 // JSON is a helper function, following is its function code.
 //
-//  data, _ := json.Marshal(v)
-//  return string(data)
+//	data, _ := json.Marshal(v)
+//	return string(data)
 func JSON(v interface{}) string {
 	pool := getBytesBufferPool()
 	buffer := pool.Get()
@@ -33,8 +33,8 @@ func JSON(v interface{}) string {
 
 // XML is a helper function, following is its function code.
 //
-//  data, _ := xml.Marshal(v)
-//  return string(data)
+//	data, _ := xml.Marshal(v)
+//	return string(data)
 func XML(v interface{}) string {
 	pool := getBytesBufferPool()
 	buffer := pool.Get()
