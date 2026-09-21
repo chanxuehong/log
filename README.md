@@ -1,5 +1,7 @@
 ## log
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/chanxuehong/log)](https://pkg.go.dev/github.com/chanxuehong/log)
+
 ```golang
 package main
 
